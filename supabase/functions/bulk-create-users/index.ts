@@ -94,15 +94,46 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Create profile with all the data
         if (authData.user) {
+          const profileData = {
+            user_id: authData.user.id,
+            username: userData.email.split('@')[0],
+            display_name: userData.fullName,
+            email: userData.email,
+            full_name: userData.profileData.full_name,
+            gender: userData.profileData.gender,
+            marital_status: userData.profileData.marital_status,
+            race: userData.profileData.race,
+            religion: userData.profileData.religion,
+            date_of_birth: userData.profileData.date_of_birth,
+            born_place: userData.profileData.born_place,
+            passport_number: userData.profileData.passport_number,
+            arc_number: userData.profileData.arc_number,
+            identity_card_number: userData.profileData.identity_card_number,
+            telephone_malaysia: userData.profileData.telephone_malaysia,
+            telephone_korea: userData.profileData.telephone_korea,
+            address_malaysia: userData.profileData.address_malaysia,
+            address_korea: userData.profileData.address_korea,
+            studying_place: userData.profileData.studying_place,
+            study_course: userData.profileData.study_course,
+            study_level: userData.profileData.study_level,
+            study_start_date: userData.profileData.study_start_date,
+            study_end_date: userData.profileData.study_end_date,
+            sponsorship: userData.profileData.sponsorship,
+            sponsorship_address: userData.profileData.sponsorship_address,
+            sponsorship_phone_number: userData.profileData.sponsorship_phone_number,
+            blood_type: userData.profileData.blood_type,
+            allergy: userData.profileData.allergy,
+            medical_condition: userData.profileData.medical_condition,
+            next_of_kin: userData.profileData.next_of_kin,
+            next_of_kin_relationship: userData.profileData.next_of_kin_relationship,
+            next_of_kin_contact_number: userData.profileData.next_of_kin_contact_number
+          };
+
+          console.log('Inserting profile data:', profileData);
+
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
-              user_id: authData.user.id,
-              username: userData.email.split('@')[0],
-              display_name: userData.fullName,
-              email: userData.email,
-              ...userData.profileData
-            });
+            .insert(profileData);
 
           if (profileError) {
             console.error('Error creating profile for', userData.email, profileError);
