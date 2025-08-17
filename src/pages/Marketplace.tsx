@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,6 +40,9 @@ interface CurrencyExchange {
 }
 
 export const Marketplace = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [currencyExchanges, setCurrencyExchanges] = useState<CurrencyExchange[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +51,41 @@ export const Marketplace = () => {
   const [conditionFilter, setConditionFilter] = useState("all");
   const [exchangeSearchTerm, setExchangeSearchTerm] = useState("");
   const [currencyFilter, setCurrencyFilter] = useState("all");
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
+    fetchData();
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -105,8 +145,11 @@ export const Marketplace = () => {
   ])];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-8">
+    <div className="min-h-screen bg-background flex">
+      <Sidebar user={user} session={session} profile={profile} />
+      
+      <main className="flex-1 p-6">
+        <div className="container mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -302,7 +345,8 @@ export const Marketplace = () => {
             )}
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
