@@ -154,11 +154,34 @@ export default function Profile() {
               </div>
               <div>
                 <Label htmlFor="race">Race</Label>
-                <Input {...register("race")} placeholder="Enter your race" />
+                <Select onValueChange={(value) => setValue("race", value)} value={watch("race")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select race" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="malay">Malay</SelectItem>
+                    <SelectItem value="chinese">Chinese</SelectItem>
+                    <SelectItem value="indian">Indian</SelectItem>
+                    <SelectItem value="others">Others (Enter Detail)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="religion">Religion</Label>
-                <Input {...register("religion")} placeholder="Enter your religion" />
+                <Select onValueChange={(value) => setValue("religion", value)} value={watch("religion")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select religion" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="islam">Islam</SelectItem>
+                    <SelectItem value="christianity">Christianity</SelectItem>
+                    <SelectItem value="buddhism">Buddhism</SelectItem>
+                    <SelectItem value="hinduism">Hinduism</SelectItem>
+                    <SelectItem value="taoism">Taoism</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="date_of_birth">Date of Birth</Label>
@@ -346,7 +369,21 @@ export default function Profile() {
               </div>
               <div>
                 <Label htmlFor="next_of_kin_relationship">Relationship</Label>
-                <Input {...register("next_of_kin_relationship")} placeholder="e.g., Parent, Spouse" />
+                <Select onValueChange={(value) => setValue("next_of_kin_relationship", value)} value={watch("next_of_kin_relationship")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select relationship" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="parent">Parent</SelectItem>
+                    <SelectItem value="spouse">Spouse</SelectItem>
+                    <SelectItem value="sibling">Sibling</SelectItem>
+                    <SelectItem value="child">Child</SelectItem>
+                    <SelectItem value="guardian">Guardian</SelectItem>
+                    <SelectItem value="friend">Friend</SelectItem>
+                    <SelectItem value="relative">Relative</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="next_of_kin_contact_number">Contact Number</Label>
