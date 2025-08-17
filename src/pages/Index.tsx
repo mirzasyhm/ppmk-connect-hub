@@ -5,6 +5,11 @@ import { AuthCard } from "@/components/AuthCard";
 import { Sidebar } from "@/components/Sidebar";
 import { CreatePost } from "@/components/CreatePost";
 import { PostCard } from "@/components/PostCard";
+import { BroadcastCard } from "@/components/FeedItems/BroadcastCard";
+import { MarketplaceCard } from "@/components/FeedItems/MarketplaceCard";
+import { EventCard } from "@/components/FeedItems/EventCard";
+import { CommunityCard } from "@/components/FeedItems/CommunityCard";
+import { CommunityPostCard } from "@/components/FeedItems/CommunityPostCard";
 import heroImage from "@/assets/hero-brutalist.jpg";
 
 const Index = () => {
@@ -12,6 +17,7 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
+  const [feedItems, setFeedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +35,7 @@ const Index = () => {
         } else {
           setProfile(null);
           setPosts([]);
+          setFeedItems([]);
         }
         setLoading(false);
       }
@@ -64,33 +71,83 @@ const Index = () => {
       }
       
       setProfile(data);
-      fetchPosts();
+      fetchFeed();
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
   };
 
-  const fetchPosts = async () => {
+  const fetchFeed = async () => {
     try {
-      const { data, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            display_name,
-            avatar_url
-          ),
-          likes (
-            user_id
-          )
-        `)
-        .order("created_at", { ascending: false });
+      // Fetch all content types in parallel
+      const [postsResult, broadcastsResult, marketplaceResult, eventsResult, communitiesResult, communityPostsResult] = await Promise.all([
+        // Regular posts
+        supabase
+          .from("posts")
+          .select(`
+            *,
+            profiles:user_id (
+              username,
+              display_name,
+              avatar_url
+            ),
+            likes (
+              user_id
+            )
+          `)
+          .order("created_at", { ascending: false }),
+        
+        // Broadcasts
+        supabase
+          .from("broadcasts")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        
+        // Marketplace items
+        supabase
+          .from("marketplace")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        
+        // Events
+        supabase
+          .from("events")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        
+        // Communities
+        supabase
+          .from("communities")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        
+        // Community posts
+        supabase
+          .from("community_posts")
+          .select(`
+            *,
+            communities (
+              name,
+              type
+            )
+          `)
+          .order("created_at", { ascending: false })
+      ]);
 
-      if (error) throw error;
-      setPosts(data || []);
+      // Combine and sort all items by creation date
+      const allItems = [
+        ...(postsResult.data || []).map(item => ({ ...item, type: 'post' })),
+        ...(broadcastsResult.data || []).map(item => ({ ...item, type: 'broadcast' })),
+        ...(marketplaceResult.data || []).map(item => ({ ...item, type: 'marketplace' })),
+        ...(eventsResult.data || []).map(item => ({ ...item, type: 'event' })),
+        ...(communitiesResult.data || []).map(item => ({ ...item, type: 'community' })),
+        ...(communityPostsResult.data || []).map(item => ({ ...item, type: 'community_post' }))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setFeedItems(allItems);
+      setPosts(postsResult.data || []);
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("Error fetching feed:", error);
     }
   };
 
@@ -147,25 +204,42 @@ const Index = () => {
           <CreatePost 
             profile={profile} 
             currentUserId={user.id} 
-            onPostCreated={fetchPosts}
+            onPostCreated={fetchFeed}
           />
           
           <div className="space-y-4">
-            {posts.length === 0 ? (
+            {feedItems.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground text-lg">
-                  No posts yet. Be the first to share something!
+                  No content yet. Be the first to share something!
                 </p>
               </div>
             ) : (
-              posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  currentUserId={user.id}
-                  onLikeUpdate={fetchPosts}
-                />
-              ))
+              feedItems.map((item) => {
+                switch (item.type) {
+                  case 'post':
+                    return (
+                      <PostCard
+                        key={item.id}
+                        post={item}
+                        currentUserId={user.id}
+                        onLikeUpdate={fetchFeed}
+                      />
+                    );
+                  case 'broadcast':
+                    return <BroadcastCard key={item.id} broadcast={item} />;
+                  case 'marketplace':
+                    return <MarketplaceCard key={item.id} item={item} />;
+                  case 'event':
+                    return <EventCard key={item.id} event={item} />;
+                  case 'community':
+                    return <CommunityCard key={item.id} community={item} />;
+                  case 'community_post':
+                    return <CommunityPostCard key={item.id} post={item} />;
+                  default:
+                    return null;
+                }
+              })
             )}
           </div>
         </div>
