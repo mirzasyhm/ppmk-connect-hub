@@ -2,7 +2,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Home, Users, Heart, User as UserIcon, LogOut } from "lucide-react";
+import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SidebarProps {
@@ -64,16 +64,24 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
         <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <Home className="w-5 h-5" />
-          Home
+          <Rss className="w-5 h-5" />
+          Feed
+        </Button>
+        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
+          <Megaphone className="w-5 h-5" />
+          Broadcast
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
           <Users className="w-5 h-5" />
-          Friends
+          Communities
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <Heart className="w-5 h-5" />
-          Liked Posts
+          <ShoppingCart className="w-5 h-5" />
+          Marketplace
+        </Button>
+        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
+          <MessageCircle className="w-5 h-5" />
+          Message
         </Button>
         <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
           <UserIcon className="w-5 h-5" />
