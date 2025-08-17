@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert(profileData);
+            .upsert(profileData, { onConflict: 'user_id' });
 
           if (profileError) {
             console.error('Error creating profile for', userData.email, profileError);
