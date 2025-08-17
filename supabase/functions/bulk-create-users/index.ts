@@ -47,21 +47,32 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         console.log(`Processing user: ${userData.email}`);
 
-        // Create invited credential record first
-        const { error: credError } = await supabase
+        // Check if invited credential already exists
+        const { data: existingCred } = await supabase
           .from('invited_credentials')
-          .insert({
-            email: userData.email,
-            password_hash: userData.password,
-            role: userData.role || 'member',
-            invited_by: createdBy,
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          });
+          .select('id')
+          .eq('email', userData.email)
+          .single();
 
-        if (credError) {
-          console.error('Error creating credential for', userData.email, credError);
-          results.push({ email: userData.email, success: false, error: credError.message });
-          continue;
+        // Only create invited credential if it doesn't exist
+        if (!existingCred) {
+          const { error: credError } = await supabase
+            .from('invited_credentials')
+            .insert({
+              email: userData.email,
+              password_hash: userData.password,
+              role: userData.role || 'member',
+              invited_by: createdBy,
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            });
+
+          if (credError) {
+            console.error('Error creating credential for', userData.email, credError);
+            results.push({ email: userData.email, success: false, error: credError.message });
+            continue;
+          }
+        } else {
+          console.log(`Invited credential already exists for ${userData.email}, proceeding with user creation`);
         }
 
         // Create the user account using admin API
