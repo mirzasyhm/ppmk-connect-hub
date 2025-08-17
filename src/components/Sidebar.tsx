@@ -2,7 +2,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
+import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "react-router-dom";
 
@@ -94,6 +94,12 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
           <Link to="/marketplace">
             <ShoppingCart className="w-5 h-5" />
             Marketplace
+          </Link>
+        </Button>
+        <Button asChild variant="ghost" className={getNavClassName('/events')}>
+          <Link to="/events">
+            <Calendar className="w-5 h-5" />
+            Events
           </Link>
         </Button>
         <Button asChild variant="ghost" className={getNavClassName('/messages')}>
