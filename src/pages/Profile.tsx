@@ -46,6 +46,9 @@ interface ProfileFormData {
 export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [customRace, setCustomRace] = useState("");
+  const [customReligion, setCustomReligion] = useState("");
+  const [customRelationship, setCustomRelationship] = useState("");
   
   const { register, handleSubmit, setValue, watch } = useForm<ProfileFormData>();
 
@@ -154,7 +157,12 @@ export default function Profile() {
               </div>
               <div>
                 <Label htmlFor="race">Race</Label>
-                <Select onValueChange={(value) => setValue("race", value)} value={watch("race")}>
+                <Select onValueChange={(value) => {
+                  setValue("race", value);
+                  if (value === "others") {
+                    setValue("race", customRace);
+                  }
+                }} value={watch("race")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select race" />
                   </SelectTrigger>
@@ -165,10 +173,27 @@ export default function Profile() {
                     <SelectItem value="others">Others (Enter Detail)</SelectItem>
                   </SelectContent>
                 </Select>
+                {watch("race") === "others" && (
+                  <div className="mt-2">
+                    <Input 
+                      value={customRace}
+                      onChange={(e) => {
+                        setCustomRace(e.target.value);
+                        setValue("race", e.target.value);
+                      }}
+                      placeholder="Please specify your race" 
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="religion">Religion</Label>
-                <Select onValueChange={(value) => setValue("religion", value)} value={watch("religion")}>
+                <Select onValueChange={(value) => {
+                  setValue("religion", value);
+                  if (value === "other") {
+                    setValue("religion", customReligion);
+                  }
+                }} value={watch("religion")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select religion" />
                   </SelectTrigger>
@@ -182,6 +207,18 @@ export default function Profile() {
                     <SelectItem value="none">None</SelectItem>
                   </SelectContent>
                 </Select>
+                {watch("religion") === "other" && (
+                  <div className="mt-2">
+                    <Input 
+                      value={customReligion}
+                      onChange={(e) => {
+                        setCustomReligion(e.target.value);
+                        setValue("religion", e.target.value);
+                      }}
+                      placeholder="Please specify your religion" 
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="date_of_birth">Date of Birth</Label>
@@ -369,7 +406,12 @@ export default function Profile() {
               </div>
               <div>
                 <Label htmlFor="next_of_kin_relationship">Relationship</Label>
-                <Select onValueChange={(value) => setValue("next_of_kin_relationship", value)} value={watch("next_of_kin_relationship")}>
+                <Select onValueChange={(value) => {
+                  setValue("next_of_kin_relationship", value);
+                  if (value === "other") {
+                    setValue("next_of_kin_relationship", customRelationship);
+                  }
+                }} value={watch("next_of_kin_relationship")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select relationship" />
                   </SelectTrigger>
@@ -384,6 +426,18 @@ export default function Profile() {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {watch("next_of_kin_relationship") === "other" && (
+                  <div className="mt-2">
+                    <Input 
+                      value={customRelationship}
+                      onChange={(e) => {
+                        setCustomRelationship(e.target.value);
+                        setValue("next_of_kin_relationship", e.target.value);
+                      }}
+                      placeholder="Please specify the relationship" 
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="next_of_kin_contact_number">Contact Number</Label>
