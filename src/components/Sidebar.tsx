@@ -1,8 +1,9 @@
+import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar } from "lucide-react";
+import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "react-router-dom";
 
@@ -12,9 +13,34 @@ interface SidebarProps {
   profile: any;
 }
 
+interface UserRole {
+  role: string;
+}
+
 export const Sidebar = ({ user, session, profile }: SidebarProps) => {
   const { toast } = useToast();
   const location = useLocation();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      checkUserRole();
+    }
+  }, [user]);
+
+  const checkUserRole = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_user_role', {
+        _user_id: user?.id
+      });
+      
+      if (!error) {
+        setUserRole(data);
+      }
+    } catch (error) {
+      console.error('Error checking role:', error);
+    }
+  };
 
   const getNavClassName = (path: string) => {
     const isActive = location.pathname === path;
@@ -114,6 +140,14 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
             Profile
           </Link>
         </Button>
+        {(userRole === 'admin' || userRole === 'superadmin') && (
+          <Button asChild variant="ghost" className={getNavClassName('/admin')}>
+            <Link to="/admin">
+              <Shield className="w-5 h-5" />
+              Admin
+            </Link>
+          </Button>
+        )}
       </nav>
 
       {/* Sign Out */}
