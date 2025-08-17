@@ -5,7 +5,7 @@ import { AuthCard } from "@/components/AuthCard";
 import { Sidebar } from "@/components/Sidebar";
 import { CreatePost } from "@/components/CreatePost";
 import { PostCard } from "@/components/PostCard";
-import heroImage from "@/assets/hero-image.jpg";
+import heroImage from "@/assets/hero-image-yellow.jpg";
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
