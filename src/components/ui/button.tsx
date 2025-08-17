@@ -9,17 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow transition-smooth",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-brutal transition-brutal border-2 border-foreground",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-brutal border-2 border-foreground",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border-2 border-foreground bg-background hover:bg-foreground hover:text-background shadow-brutal transition-brutal",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        gradient: "bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow transition-smooth",
-        social: "bg-gradient-social text-social-foreground hover:opacity-90 shadow-glow transition-smooth",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-brutal border-2 border-foreground",
+        ghost: "hover:bg-accent hover:text-accent-foreground border-2 border-transparent hover:border-foreground transition-brutal",
+        link: "text-primary underline-offset-4 hover:underline border-2 border-transparent",
+        brutal: "bg-primary text-primary-foreground hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-brutal transition-brutal border-2 border-foreground font-bold uppercase",
       },
       size: {
         default: "h-10 px-4 py-2",

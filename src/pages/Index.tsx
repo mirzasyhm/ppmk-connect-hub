@@ -5,7 +5,7 @@ import { AuthCard } from "@/components/AuthCard";
 import { Sidebar } from "@/components/Sidebar";
 import { CreatePost } from "@/components/CreatePost";
 import { PostCard } from "@/components/PostCard";
-import heroImage from "@/assets/hero-image-yellow.jpg";
+import heroImage from "@/assets/hero-brutalist.jpg";
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -125,10 +125,10 @@ const Index = () => {
         {/* Content */}
         <div className="relative z-10 w-full max-w-md px-6">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold text-primary mb-4 uppercase tracking-wider">
               PPMKFriends
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-foreground font-bold uppercase">
               Connect with friends and share your moments
             </p>
           </div>

@@ -51,7 +51,7 @@ export const PostCard = ({ post, currentUserId, onLikeUpdate }: PostCardProps) =
   };
 
   return (
-    <Card className="bg-gradient-card backdrop-blur-md border-border/50 shadow-card hover:shadow-glow transition-smooth">
+    <Card className="bg-card border-2 border-foreground shadow-brutal hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-brutal">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">

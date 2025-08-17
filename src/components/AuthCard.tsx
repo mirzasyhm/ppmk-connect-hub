@@ -82,9 +82,9 @@ export const AuthCard = ({ onAuthSuccess }: AuthCardProps) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-card backdrop-blur-md border-border/50">
+    <Card className="w-full max-w-md mx-auto bg-card border-2 border-foreground shadow-brutal">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
+        <CardTitle className="text-2xl text-primary font-bold uppercase">
           {isLogin ? "Welcome Back" : "Join PPMKFriends"}
         </CardTitle>
         <CardDescription>
@@ -129,7 +129,7 @@ export const AuthCard = ({ onAuthSuccess }: AuthCardProps) => {
           />
           <Button 
             type="submit" 
-            variant="gradient" 
+            variant="brutal" 
             className="w-full" 
             disabled={loading}
           >

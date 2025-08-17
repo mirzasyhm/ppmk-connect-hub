@@ -51,7 +51,7 @@ export const CreatePost = ({ profile, currentUserId, onPostCreated }: CreatePost
   };
 
   return (
-    <Card className="bg-gradient-card backdrop-blur-md border-border/50 shadow-card">
+    <Card className="bg-card border-2 border-foreground shadow-brutal">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">
@@ -73,7 +73,7 @@ export const CreatePost = ({ profile, currentUserId, onPostCreated }: CreatePost
             placeholder="Share something with your friends..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[100px] resize-none border-border/30 bg-background/50 placeholder:text-muted-foreground"
+            className="min-h-[100px] resize-none border-2 border-foreground bg-background"
             maxLength={500}
           />
           
@@ -95,7 +95,7 @@ export const CreatePost = ({ profile, currentUserId, onPostCreated }: CreatePost
             
             <Button
               type="submit"
-              variant="gradient"
+              variant="brutal"
               size="sm"
               disabled={!content.trim() || posting}
               className="gap-2"

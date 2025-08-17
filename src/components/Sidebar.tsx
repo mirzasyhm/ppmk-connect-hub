@@ -33,20 +33,20 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
   if (!user || !session) return null;
 
   return (
-    <div className="w-64 h-screen bg-gradient-card backdrop-blur-md border-r border-border/50 p-6 flex flex-col">
+    <div className="w-64 h-screen bg-card border-r-2 border-foreground p-6 flex flex-col">
       {/* Logo */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-primary uppercase tracking-wider">
           PPMKFriends
         </h1>
       </div>
 
       {/* Profile Section */}
-      <div className="mb-8 p-4 rounded-lg bg-gradient-card border border-border/30">
+      <div className="mb-8 p-4 bg-card border-2 border-foreground shadow-brutal">
         <div className="flex items-center gap-3">
-          <Avatar className="w-12 h-12">
+          <Avatar className="w-12 h-12 border-2 border-foreground">
             <AvatarImage src={profile?.avatar_url} />
-            <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold">
               {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
@@ -63,19 +63,19 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12">
+        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
           <Home className="w-5 h-5" />
           Home
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12">
+        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
           <Users className="w-5 h-5" />
           Friends
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12">
+        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
           <Heart className="w-5 h-5" />
           Liked Posts
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12">
+        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
           <UserIcon className="w-5 h-5" />
           Profile
         </Button>
