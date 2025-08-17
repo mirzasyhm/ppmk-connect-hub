@@ -25,6 +25,8 @@ const Admin = ({ user, session, profile }: AdminProps) => {
   const [invitedCredentials, setInvitedCredentials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [generatedCredentials, setGeneratedCredentials] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -102,8 +104,37 @@ const Admin = ({ user, session, profile }: AdminProps) => {
     setUploadFile(file);
   };
 
+  // Function to generate random password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  // Function to send credentials email
+  const sendCredentialsEmail = async (email: string, password: string, fullName: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-credentials', {
+        body: { email, password, fullName }
+      });
+      
+      if (error) {
+        console.error('Error sending email:', error);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error sending email:', error);
+      return false;
+    }
+  };
+
   const processExcelFile = async () => {
     if (!uploadFile) return;
+    setIsProcessing(true);
 
     try {
       const reader = new FileReader();
@@ -114,9 +145,12 @@ const Admin = ({ user, session, profile }: AdminProps) => {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+        const newCredentials: any[] = [];
+
         // Process each row and create invited credentials
         for (const row of jsonData) {
           const userData = row as any;
+          const generatedPassword = generatePassword();
           
           try {
             // Create invited credential
@@ -124,7 +158,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
               .from('invited_credentials')
               .insert({
                 email: userData.email,
-                password_hash: userData.password || 'default123', // You might want to generate this
+                password_hash: generatedPassword,
                 role: userData.role || 'member',
                 invited_by: user?.id,
                 expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
@@ -138,11 +172,11 @@ const Admin = ({ user, session, profile }: AdminProps) => {
             // Create the user account
             const { data: authData, error: authError } = await supabase.auth.admin.createUser({
               email: userData.email,
-              password: userData.password || 'default123',
+              password: generatedPassword,
               email_confirm: true,
               user_metadata: {
-                username: userData.username,
-                display_name: userData.display_name || userData.full_name
+                username: userData.email.split('@')[0],
+                display_name: userData.fullName
               }
             });
 
@@ -151,47 +185,55 @@ const Admin = ({ user, session, profile }: AdminProps) => {
               continue;
             }
 
-            // Create profile with all the data
+            // Create profile with all the data from Excel
             if (authData.user) {
               const { error: profileError } = await supabase
                 .from('profiles')
                 .insert({
                   user_id: authData.user.id,
-                  username: userData.username,
-                  display_name: userData.display_name || userData.full_name,
-                  full_name: userData.full_name,
+                  username: userData.email.split('@')[0],
+                  display_name: userData.fullName,
+                  full_name: userData.fullName,
                   email: userData.email,
                   gender: userData.gender,
-                  marital_status: userData.marital_status,
+                  marital_status: userData.maritalStatus,
                   race: userData.race,
                   religion: userData.religion,
-                  date_of_birth: userData.date_of_birth,
-                  born_place: userData.born_place,
-                  passport_number: userData.passport_number,
-                  arc_number: userData.arc_number,
-                  identity_card_number: userData.identity_card_number,
-                  telephone_malaysia: userData.telephone_malaysia,
-                  telephone_korea: userData.telephone_korea,
-                  address_malaysia: userData.address_malaysia,
-                  address_korea: userData.address_korea,
-                  studying_place: userData.studying_place,
-                  study_course: userData.study_course,
-                  study_level: userData.study_level,
-                  study_start_date: userData.study_start_date,
-                  study_end_date: userData.study_end_date,
+                  date_of_birth: userData.dateOfBirth,
+                  born_place: userData.bornPlace,
+                  passport_number: userData.passportNumber,
+                  arc_number: userData.arcNumber,
+                  identity_card_number: userData.identityCardNumber,
+                  telephone_malaysia: userData["telephoneNumbers Malaysia"],
+                  telephone_korea: userData["telephoneNumbers Korea"],
+                  address_malaysia: userData["addresses Malaysia"],
+                  address_korea: userData["addresses Korea"],
+                  studying_place: userData.studyingPlace,
+                  study_course: userData.studyCourse,
+                  study_level: userData.studyLevel,
+                  study_start_date: userData["studyPeriod StartDate"],
+                  study_end_date: userData["studyPeriod EndDate"],
                   sponsorship: userData.sponsorship,
-                  sponsorship_address: userData.sponsorship_address,
-                  sponsorship_phone_number: userData.sponsorship_phone_number,
-                  blood_type: userData.blood_type,
+                  sponsorship_address: userData.sponsorshipAddress,
+                  sponsorship_phone_number: userData.sponsorshipPhoneNumber,
+                  blood_type: userData.bloodType,
                   allergy: userData.allergy,
-                  medical_condition: userData.medical_condition,
-                  next_of_kin: userData.next_of_kin,
-                  next_of_kin_relationship: userData.next_of_kin_relationship,
-                  next_of_kin_contact_number: userData.next_of_kin_contact_number
+                  medical_condition: userData.medicalCondition,
+                  next_of_kin: userData.nextOfKin,
+                  next_of_kin_relationship: userData.nextOfKinRelationship,
+                  next_of_kin_contact_number: userData.nextOfKinContactNumber
                 });
 
               if (profileError) {
                 console.error('Error creating profile for', userData.email, profileError);
+              } else {
+                // Store credentials for tracking
+                newCredentials.push({
+                  email: userData.email,
+                  password: generatedPassword,
+                  fullName: userData.fullName,
+                  created: new Date().toISOString()
+                });
               }
             }
           } catch (error) {
@@ -199,9 +241,12 @@ const Admin = ({ user, session, profile }: AdminProps) => {
           }
         }
 
+        // Update generated credentials state
+        setGeneratedCredentials(prev => [...prev, ...newCredentials]);
+
         toast({
           title: "Bulk Import Complete",
-          description: `Processed ${jsonData.length} users from Excel file.`,
+          description: `Processed ${jsonData.length} users from Excel file with generated passwords.`,
         });
 
         await fetchAdminData();
@@ -216,7 +261,54 @@ const Admin = ({ user, session, profile }: AdminProps) => {
         description: "Failed to process Excel file.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  // Function to send all credentials
+  const sendAllCredentials = async () => {
+    if (generatedCredentials.length === 0) return;
+
+    setIsProcessing(true);
+    let sentCount = 0;
+
+    for (const cred of generatedCredentials) {
+      const success = await sendCredentialsEmail(cred.email, cred.password, cred.fullName);
+      if (success) {
+        sentCount++;
+      }
+    }
+
+    toast({
+      title: "Email Distribution Complete",
+      description: `Sent credentials to ${sentCount} out of ${generatedCredentials.length} users.`,
+    });
+
+    setIsProcessing(false);
+  };
+
+  // Function to download credentials as file
+  const downloadCredentials = () => {
+    if (generatedCredentials.length === 0) return;
+
+    const csvContent = [
+      ['Email', 'Password', 'Full Name', 'Created Date'],
+      ...generatedCredentials.map(cred => [
+        cred.email,
+        cred.password,
+        cred.fullName,
+        new Date(cred.created).toLocaleString()
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `user-credentials-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const updateUserRole = async (userId: string, newRole: string) => {
@@ -429,9 +521,59 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                           <Button 
                             onClick={processExcelFile}
                             className="mt-3"
+                            disabled={isProcessing}
                           >
-                            Process File
+                            {isProcessing ? 'Processing...' : 'Process File'}
                           </Button>
+                        </div>
+                      )}
+
+                      {generatedCredentials.length > 0 && (
+                        <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                          <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
+                            Generated Credentials ({generatedCredentials.length} users)
+                          </h4>
+                          <div className="flex gap-2 mb-4">
+                            <Button 
+                              onClick={sendAllCredentials}
+                              disabled={isProcessing}
+                              variant="outline"
+                              size="sm"
+                            >
+                              {isProcessing ? 'Sending...' : 'Send All Credentials'}
+                            </Button>
+                            <Button 
+                              onClick={downloadCredentials}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Download CSV
+                            </Button>
+                          </div>
+                          <div className="max-h-40 overflow-y-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="text-xs">Email</TableHead>
+                                  <TableHead className="text-xs">Password</TableHead>
+                                  <TableHead className="text-xs">Name</TableHead>
+                                  <TableHead className="text-xs">Created</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {generatedCredentials.map((cred, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell className="text-xs">{cred.email}</TableCell>
+                                    <TableCell className="text-xs font-mono">{cred.password}</TableCell>
+                                    <TableCell className="text-xs">{cred.fullName}</TableCell>
+                                    <TableCell className="text-xs">
+                                      {new Date(cred.created).toLocaleString()}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                       )}
 
