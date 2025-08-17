@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
   user: User | null;
@@ -13,6 +14,14 @@ interface SidebarProps {
 
 export const Sidebar = ({ user, session, profile }: SidebarProps) => {
   const { toast } = useToast();
+  const location = useLocation();
+
+  const getNavClassName = (path: string) => {
+    const isActive = location.pathname === path;
+    return `w-full justify-start gap-3 h-12 font-bold uppercase ${
+      isActive ? 'bg-primary text-primary-foreground' : ''
+    }`;
+  };
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -63,29 +72,41 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <Rss className="w-5 h-5" />
-          Feed
+        <Button asChild variant="ghost" className={getNavClassName('/')}>
+          <Link to="/">
+            <Rss className="w-5 h-5" />
+            Feed
+          </Link>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <Megaphone className="w-5 h-5" />
-          Broadcast
+        <Button asChild variant="ghost" className={getNavClassName('/broadcast')}>
+          <Link to="/broadcast">
+            <Megaphone className="w-5 h-5" />
+            Broadcast
+          </Link>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <Users className="w-5 h-5" />
-          Communities
+        <Button asChild variant="ghost" className={getNavClassName('/communities')}>
+          <Link to="/communities">
+            <Users className="w-5 h-5" />
+            Communities
+          </Link>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <ShoppingCart className="w-5 h-5" />
-          Marketplace
+        <Button asChild variant="ghost" className={getNavClassName('/marketplace')}>
+          <Link to="/marketplace">
+            <ShoppingCart className="w-5 h-5" />
+            Marketplace
+          </Link>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <MessageCircle className="w-5 h-5" />
-          Message
+        <Button asChild variant="ghost" className={getNavClassName('/messages')}>
+          <Link to="/messages">
+            <MessageCircle className="w-5 h-5" />
+            Message
+          </Link>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold uppercase">
-          <UserIcon className="w-5 h-5" />
-          Profile
+        <Button asChild variant="ghost" className={getNavClassName('/profile')}>
+          <Link to="/profile">
+            <UserIcon className="w-5 h-5" />
+            Profile
+          </Link>
         </Button>
       </nav>
 
