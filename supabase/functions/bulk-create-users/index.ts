@@ -115,8 +115,8 @@ const handler = async (req: Request): Promise<Response> => {
           // Send credentials email
           try {
             const emailResponse = await resend.emails.send({
-              from: "Admin <onboarding@resend.dev>",
-              to: [userData.email],
+              from: "Acme <onboarding@resend.dev>",
+              to: ["delivered@resend.dev"], // Testing mode - replace with userData.email after domain setup
               subject: "Your Account Credentials",
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

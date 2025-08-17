@@ -28,8 +28,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending credentials to ${email}`);
 
     const emailResponse = await resend.emails.send({
-      from: "Admin <onboarding@resend.dev>",
-      to: [email],
+      from: "Acme <onboarding@resend.dev>",
+      to: ["delivered@resend.dev"], // Testing mode - replace with email after domain setup
       subject: "Your Account Credentials",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
