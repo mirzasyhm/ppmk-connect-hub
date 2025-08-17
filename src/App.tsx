@@ -8,6 +8,7 @@ import Broadcast from "./pages/Broadcast";
 import Communities from "./pages/Communities";
 import { Marketplace } from "./pages/Marketplace";
 import { Events } from "./pages/Events";
+import { Messages } from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/communities" element={<Communities />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/messages" element={<Messages />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
