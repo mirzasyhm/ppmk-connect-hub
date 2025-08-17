@@ -80,7 +80,7 @@ export default function Profile() {
         // Handle custom fields for select dropdowns
         if (profile.race && !['malay', 'chinese', 'indian'].includes(profile.race)) {
           setCustomRace(profile.race);
-          setValue('race', 'others');
+          setValue('race', 'other');
         }
         
         if (profile.religion && !['islam', 'christianity', 'buddhism', 'hinduism', 'taoism', 'none'].includes(profile.religion)) {
@@ -187,7 +187,7 @@ export default function Profile() {
                     <SelectItem value="malay">Malay</SelectItem>
                     <SelectItem value="chinese">Chinese</SelectItem>
                     <SelectItem value="indian">Indian</SelectItem>
-                    <SelectItem value="others">Others (Enter Detail)</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 {watch("race") === "others" && (
