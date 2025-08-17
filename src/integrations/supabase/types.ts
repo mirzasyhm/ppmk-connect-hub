@@ -286,6 +286,48 @@ export type Database = {
         }
         Relationships: []
       }
+      currency_exchanges: {
+        Row: {
+          created_at: string
+          description: string | null
+          exchange_rate: number | null
+          have_amount: number
+          have_currency: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+          want_amount: number
+          want_currency: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          exchange_rate?: number | null
+          have_amount: number
+          have_currency: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          want_amount: number
+          want_currency: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          exchange_rate?: number | null
+          have_amount?: number
+          have_currency?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          want_amount?: number
+          want_currency?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           category: string
