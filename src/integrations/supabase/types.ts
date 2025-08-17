@@ -550,31 +550,118 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_korea: string | null
+          address_malaysia: string | null
+          allergy: string | null
+          arc_number: string | null
           avatar_url: string | null
           bio: string | null
+          blood_type: string | null
+          born_place: string | null
           created_at: string
+          date_of_birth: string | null
           display_name: string | null
+          email: string | null
+          full_name: string | null
+          gender: string | null
           id: string
+          identity_card_number: string | null
+          marital_status: string | null
+          medical_condition: string | null
+          next_of_kin: string | null
+          next_of_kin_contact_number: string | null
+          next_of_kin_relationship: string | null
+          passport_number: string | null
+          race: string | null
+          religion: string | null
+          sponsorship: string | null
+          sponsorship_address: string | null
+          sponsorship_phone_number: string | null
+          study_course: string | null
+          study_end_date: string | null
+          study_level: string | null
+          study_start_date: string | null
+          studying_place: string | null
+          telephone_korea: string | null
+          telephone_malaysia: string | null
           updated_at: string
           user_id: string
           username: string | null
         }
         Insert: {
+          address_korea?: string | null
+          address_malaysia?: string | null
+          allergy?: string | null
+          arc_number?: string | null
           avatar_url?: string | null
           bio?: string | null
+          blood_type?: string | null
+          born_place?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
+          email?: string | null
+          full_name?: string | null
+          gender?: string | null
           id?: string
+          identity_card_number?: string | null
+          marital_status?: string | null
+          medical_condition?: string | null
+          next_of_kin?: string | null
+          next_of_kin_contact_number?: string | null
+          next_of_kin_relationship?: string | null
+          passport_number?: string | null
+          race?: string | null
+          religion?: string | null
+          sponsorship?: string | null
+          sponsorship_address?: string | null
+          sponsorship_phone_number?: string | null
+          study_course?: string | null
+          study_end_date?: string | null
+          study_level?: string | null
+          study_start_date?: string | null
+          studying_place?: string | null
+          telephone_korea?: string | null
+          telephone_malaysia?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
         }
         Update: {
+          address_korea?: string | null
+          address_malaysia?: string | null
+          allergy?: string | null
+          arc_number?: string | null
           avatar_url?: string | null
           bio?: string | null
+          blood_type?: string | null
+          born_place?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
+          email?: string | null
+          full_name?: string | null
+          gender?: string | null
           id?: string
+          identity_card_number?: string | null
+          marital_status?: string | null
+          medical_condition?: string | null
+          next_of_kin?: string | null
+          next_of_kin_contact_number?: string | null
+          next_of_kin_relationship?: string | null
+          passport_number?: string | null
+          race?: string | null
+          religion?: string | null
+          sponsorship?: string | null
+          sponsorship_address?: string | null
+          sponsorship_phone_number?: string | null
+          study_course?: string | null
+          study_end_date?: string | null
+          study_level?: string | null
+          study_start_date?: string | null
+          studying_place?: string | null
+          telephone_korea?: string | null
+          telephone_malaysia?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
