@@ -145,111 +145,88 @@ const Admin = ({ user, session, profile }: AdminProps) => {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        const newCredentials: any[] = [];
-
-        // Process each row and create invited credentials
-        for (const row of jsonData) {
-          const userData = row as any;
+        // Prepare user data for bulk creation
+        const usersToCreate = jsonData.map((row: any) => {
           const generatedPassword = generatePassword();
           
-          try {
-            // Create invited credential
-            const { error: credError } = await supabase
-              .from('invited_credentials')
-              .insert({
-                email: userData.email,
-                password_hash: generatedPassword,
-                role: userData.role || 'member',
-                invited_by: user?.id,
-                expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
-              });
-
-            if (credError) {
-              console.error('Error creating credential for', userData.email, credError);
-              continue;
+          return {
+            email: row.email,
+            password: generatedPassword,
+            fullName: row.fullName,
+            role: row.role || 'member',
+            profileData: {
+              full_name: row.fullName,
+              gender: row.gender,
+              marital_status: row.maritalStatus,
+              race: row.race,
+              religion: row.religion,
+              date_of_birth: row.dateOfBirth,
+              born_place: row.bornPlace,
+              passport_number: row.passportNumber,
+              arc_number: row.arcNumber,
+              identity_card_number: row.identityCardNumber,
+              telephone_malaysia: row["telephoneNumbers Malaysia"],
+              telephone_korea: row["telephoneNumbers Korea"],
+              address_malaysia: row["addresses Malaysia"],
+              address_korea: row["addresses Korea"],
+              studying_place: row.studyingPlace,
+              study_course: row.studyCourse,
+              study_level: row.studyLevel,
+              study_start_date: row["studyPeriod StartDate"],
+              study_end_date: row["studyPeriod EndDate"],
+              sponsorship: row.sponsorship,
+              sponsorship_address: row.sponsorshipAddress,
+              sponsorship_phone_number: row.sponsorshipPhoneNumber,
+              blood_type: row.bloodType,
+              allergy: row.allergy,
+              medical_condition: row.medicalCondition,
+              next_of_kin: row.nextOfKin,
+              next_of_kin_relationship: row.nextOfKinRelationship,
+              next_of_kin_contact_number: row.nextOfKinContactNumber
             }
-
-            // Create the user account
-            const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-              email: userData.email,
-              password: generatedPassword,
-              email_confirm: true,
-              user_metadata: {
-                username: userData.email.split('@')[0],
-                display_name: userData.fullName
-              }
-            });
-
-            if (authError) {
-              console.error('Error creating user for', userData.email, authError);
-              continue;
-            }
-
-            // Create profile with all the data from Excel
-            if (authData.user) {
-              const { error: profileError } = await supabase
-                .from('profiles')
-                .insert({
-                  user_id: authData.user.id,
-                  username: userData.email.split('@')[0],
-                  display_name: userData.fullName,
-                  full_name: userData.fullName,
-                  email: userData.email,
-                  gender: userData.gender,
-                  marital_status: userData.maritalStatus,
-                  race: userData.race,
-                  religion: userData.religion,
-                  date_of_birth: userData.dateOfBirth,
-                  born_place: userData.bornPlace,
-                  passport_number: userData.passportNumber,
-                  arc_number: userData.arcNumber,
-                  identity_card_number: userData.identityCardNumber,
-                  telephone_malaysia: userData["telephoneNumbers Malaysia"],
-                  telephone_korea: userData["telephoneNumbers Korea"],
-                  address_malaysia: userData["addresses Malaysia"],
-                  address_korea: userData["addresses Korea"],
-                  studying_place: userData.studyingPlace,
-                  study_course: userData.studyCourse,
-                  study_level: userData.studyLevel,
-                  study_start_date: userData["studyPeriod StartDate"],
-                  study_end_date: userData["studyPeriod EndDate"],
-                  sponsorship: userData.sponsorship,
-                  sponsorship_address: userData.sponsorshipAddress,
-                  sponsorship_phone_number: userData.sponsorshipPhoneNumber,
-                  blood_type: userData.bloodType,
-                  allergy: userData.allergy,
-                  medical_condition: userData.medicalCondition,
-                  next_of_kin: userData.nextOfKin,
-                  next_of_kin_relationship: userData.nextOfKinRelationship,
-                  next_of_kin_contact_number: userData.nextOfKinContactNumber
-                });
-
-              if (profileError) {
-                console.error('Error creating profile for', userData.email, profileError);
-              } else {
-                // Store credentials for tracking
-                newCredentials.push({
-                  email: userData.email,
-                  password: generatedPassword,
-                  fullName: userData.fullName,
-                  created: new Date().toISOString()
-                });
-              }
-            }
-          } catch (error) {
-            console.error('Error processing user', userData.email, error);
-          }
-        }
-
-        // Update generated credentials state
-        setGeneratedCredentials(prev => [...prev, ...newCredentials]);
-
-        toast({
-          title: "Bulk Import Complete",
-          description: `Processed ${jsonData.length} users from Excel file with generated passwords.`,
+          };
         });
 
-        await fetchAdminData();
+        console.log('Calling bulk-create-users function with', usersToCreate.length, 'users');
+
+        // Call the bulk create users edge function
+        const { data: result, error } = await supabase.functions.invoke('bulk-create-users', {
+          body: { 
+            users: usersToCreate,
+            createdBy: user?.id 
+          }
+        });
+
+        if (error) {
+          console.error('Error in bulk creation:', error);
+          toast({
+            title: "Error",
+            description: "Failed to process users in bulk.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Bulk creation result:', result);
+          
+          // Update generated credentials state with successful creations
+          const successfulCredentials = result.results
+            .filter((r: any) => r.success)
+            .map((r: any) => ({
+              email: r.email,
+              password: r.password,
+              fullName: r.fullName,
+              created: new Date().toISOString()
+            }));
+
+          setGeneratedCredentials(prev => [...prev, ...successfulCredentials]);
+
+          toast({
+            title: "Bulk Import Complete",
+            description: `Created ${result.summary.success} users, sent ${result.summary.emailsSent} emails out of ${result.summary.total} total.`,
+          });
+
+          await fetchAdminData();
+        }
+
         setUploadFile(null);
       };
 
@@ -264,28 +241,6 @@ const Admin = ({ user, session, profile }: AdminProps) => {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Function to send all credentials
-  const sendAllCredentials = async () => {
-    if (generatedCredentials.length === 0) return;
-
-    setIsProcessing(true);
-    let sentCount = 0;
-
-    for (const cred of generatedCredentials) {
-      const success = await sendCredentialsEmail(cred.email, cred.password, cred.fullName);
-      if (success) {
-        sentCount++;
-      }
-    }
-
-    toast({
-      title: "Email Distribution Complete",
-      description: `Sent credentials to ${sentCount} out of ${generatedCredentials.length} users.`,
-    });
-
-    setIsProcessing(false);
   };
 
   // Function to download credentials as file
@@ -532,7 +487,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                     <CardHeader>
                       <CardTitle>Bulk User Import</CardTitle>
                       <CardDescription>
-                        Upload an Excel file to create multiple user accounts with profiles
+                        Upload an Excel file to create multiple user accounts with profiles and automatic email distribution
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -544,7 +499,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                           onChange={handleFileUpload}
                         />
                         <p className="text-sm text-muted-foreground">
-                          Upload an Excel file with columns: email, password, role, username, display_name, full_name, etc.
+                          Upload an Excel file with user data. Users will be created automatically and credentials will be sent via email.
                         </p>
                       </div>
                       
@@ -559,7 +514,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                             className="mt-3"
                             disabled={isProcessing}
                           >
-                            {isProcessing ? 'Processing...' : 'Process File'}
+                            {isProcessing ? 'Processing & Sending Emails...' : 'Process File & Send Emails'}
                           </Button>
                         </div>
                       )}
@@ -570,14 +525,6 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                             Generated Credentials ({generatedCredentials.length} users)
                           </h4>
                           <div className="flex gap-2 mb-4">
-                            <Button 
-                              onClick={sendAllCredentials}
-                              disabled={isProcessing}
-                              variant="outline"
-                              size="sm"
-                            >
-                              {isProcessing ? 'Sending...' : 'Send All Credentials'}
-                            </Button>
                             <Button 
                               onClick={downloadCredentials}
                               variant="outline"
