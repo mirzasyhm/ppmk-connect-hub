@@ -70,11 +70,28 @@ export default function Profile() {
         .single();
 
       if (profile) {
+        // Set form values for all profile fields
         Object.keys(profile).forEach((key) => {
-          if (profile[key] !== null) {
+          if (profile[key] !== null && key !== 'id' && key !== 'user_id' && key !== 'created_at' && key !== 'updated_at') {
             setValue(key as keyof ProfileFormData, profile[key]);
           }
         });
+
+        // Handle custom fields for select dropdowns
+        if (profile.race && !['malay', 'chinese', 'indian'].includes(profile.race)) {
+          setCustomRace(profile.race);
+          setValue('race', 'others');
+        }
+        
+        if (profile.religion && !['islam', 'christianity', 'buddhism', 'hinduism', 'taoism', 'none'].includes(profile.religion)) {
+          setCustomReligion(profile.religion);
+          setValue('religion', 'other');
+        }
+        
+        if (profile.next_of_kin_relationship && !['parent', 'spouse', 'sibling', 'child', 'guardian', 'friend', 'relative'].includes(profile.next_of_kin_relationship)) {
+          setCustomRelationship(profile.next_of_kin_relationship);
+          setValue('next_of_kin_relationship', 'other');
+        }
       }
     } catch (error) {
       console.error("Error loading profile:", error);
