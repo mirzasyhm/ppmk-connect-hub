@@ -311,6 +311,42 @@ const Admin = ({ user, session, profile }: AdminProps) => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Send emails for recent invites (top 10)
+  const sendEmailsForRecentInvites = async () => {
+    if (invitedCredentials.length === 0) return;
+    setIsProcessing(true);
+    let sentCount = 0;
+    for (const cred of invitedCredentials.slice(0, 10)) {
+      const success = await sendCredentialsEmail(
+        cred.email,
+        cred.password_hash,
+        cred.full_name || cred.email.split('@')[0]
+      );
+      if (success) sentCount++;
+    }
+    toast({
+      title: 'Email Distribution Complete',
+      description: `Sent ${sentCount} out of ${Math.min(10, invitedCredentials.length)} recent invites.`,
+    });
+    setIsProcessing(false);
+  };
+
+  // Send email for a single invite
+  const sendEmailForInvite = async (cred: any) => {
+    setIsProcessing(true);
+    const success = await sendCredentialsEmail(
+      cred.email,
+      cred.password_hash,
+      cred.full_name || cred.email.split('@')[0]
+    );
+    toast({
+      title: success ? 'Email sent' : 'Failed to send',
+      description: cred.email,
+      variant: success ? 'default' : 'destructive',
+    });
+    setIsProcessing(false);
+  };
+
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
       // First, remove existing role
@@ -579,6 +615,16 @@ const Admin = ({ user, session, profile }: AdminProps) => {
 
                       <div className="mt-6">
                         <h4 className="font-medium mb-2">Recent Invitations</h4>
+                        <div className="flex justify-end mb-2">
+                          <Button
+                            onClick={sendEmailsForRecentInvites}
+                            variant="outline"
+                            size="sm"
+                            disabled={isProcessing}
+                          >
+                            {isProcessing ? 'Sending...' : 'Send Emails to Recent (Top 10)'}
+                          </Button>
+                        </div>
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -586,6 +632,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                               <TableHead>Role</TableHead>
                               <TableHead>Status</TableHead>
                               <TableHead>Created</TableHead>
+                              <TableHead>Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -602,6 +649,16 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                                 </TableCell>
                                 <TableCell>
                                   {new Date(cred.created_at).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => sendEmailForInvite(cred)}
+                                    disabled={isProcessing}
+                                  >
+                                    Send Email
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             ))}
