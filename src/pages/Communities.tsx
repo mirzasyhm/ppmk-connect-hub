@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -262,10 +261,8 @@ const Communities = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <main className="flex-1 p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="space-y-6">
         <div className="space-y-6">
           {/* Header */}
           <div className="border-2 border-foreground bg-card p-6 shadow-brutal">
@@ -513,7 +510,7 @@ const Communities = () => {
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

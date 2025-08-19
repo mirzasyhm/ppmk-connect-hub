@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -272,10 +271,8 @@ export const Marketplace = () => {
   ])];
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <main className="flex-1 p-6">
+    <div className="p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div className="container mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -669,8 +666,8 @@ export const Marketplace = () => {
             )}
           </TabsContent>
         </Tabs>
-        </div>
-      </main>
+      </div>
+      </div>
     </div>
   );
 };

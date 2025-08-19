@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Upload, Shield, Database, Search, Eye, Edit } from "lucide-react";
-import { Sidebar } from "@/components/Sidebar";
 import * as XLSX from 'xlsx';
 
 interface AdminProps {
@@ -492,10 +491,9 @@ const Admin = ({ user, session, profile }: AdminProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <main className="flex-1 p-6">
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-primary mb-2">Admin Panel</h1>
@@ -822,7 +820,8 @@ const Admin = ({ user, session, profile }: AdminProps) => {
             )}
           </Tabs>
         </div>
-      </main>
+        </div>
+      </div>
 
       {/* User Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
@@ -1264,6 +1263,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };

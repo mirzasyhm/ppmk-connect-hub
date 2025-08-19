@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -267,10 +266,9 @@ export const Messages = () => {
   };
   const filteredConversations = conversations.filter(conv => conv.other_user?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) || conv.other_user?.username?.toLowerCase().includes(searchTerm.toLowerCase()));
   const selectedConv = conversations.find(c => c.id === selectedConversation);
-  return <div className="min-h-screen bg-background flex">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <main className="flex-1 flex">
+  return (
+    <div className="flex h-full">
+      <div className="w-1/3 border-r border-border">
         {/* Conversations List */}
         <div className="w-80 border-r-2 border-foreground bg-card">
           <div className="p-4 border-b-2 border-foreground">
@@ -452,6 +450,6 @@ export const Messages = () => {
               </div>
             </div>}
         </div>
-      </main>
-    </div>;
+    </div>
+  );
 };

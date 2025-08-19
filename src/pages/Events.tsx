@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -166,10 +165,8 @@ export const Events = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <main className="flex-1 p-6">
+    <div className="p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div className="container mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -461,7 +458,7 @@ export const Events = () => {
             </Card>
           ) : null}
         </div>
-      </main>
+      </div>
     </div>
   );
 };
