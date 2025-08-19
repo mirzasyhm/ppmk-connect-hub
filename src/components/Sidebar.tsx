@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   user: User | null;
@@ -20,6 +20,7 @@ interface UserRole {
 export const Sidebar = ({ user, session, profile }: SidebarProps) => {
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,6 +63,8 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
         title: "Signed out",
         description: "You've been signed out successfully.",
       });
+      // Redirect to login page
+      navigate("/");
     }
   };
 
