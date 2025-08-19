@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, Search, Lock, Unlock, UserPlus, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -18,6 +23,14 @@ const Communities = () => {
   const [userMemberships, setUserMemberships] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newCommunity, setNewCommunity] = useState({
+    name: '',
+    description: '',
+    type: 'student_club',
+    image_url: '',
+    is_private: false
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -136,6 +149,69 @@ const Communities = () => {
     }
   };
 
+  const handleCreateCommunity = async () => {
+    if (!user || !newCommunity.name.trim() || !newCommunity.description.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("communities")
+        .insert({
+          name: newCommunity.name.trim(),
+          description: newCommunity.description.trim(),
+          type: newCommunity.type,
+          image_url: newCommunity.image_url.trim() || null,
+          is_private: newCommunity.is_private,
+          admin_id: user.id,
+          member_count: 1
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Automatically join the creator as admin
+      await supabase
+        .from("community_memberships")
+        .insert({
+          community_id: data.id,
+          user_id: user.id,
+          role: "admin",
+          status: "active"
+        });
+
+      toast({
+        title: "Community created!",
+        description: "Your community has been created successfully.",
+      });
+
+      // Reset form and close dialog
+      setNewCommunity({
+        name: '',
+        description: '',
+        type: 'student_club',
+        image_url: '',
+        is_private: false
+      });
+      setIsCreateDialogOpen(false);
+
+      // Refresh communities and memberships
+      await Promise.all([fetchCommunities(), fetchUserMemberships(user.id)]);
+    } catch (error: any) {
+      toast({
+        title: "Error creating community",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'student_club': return 'bg-primary text-primary-foreground';
@@ -206,10 +282,91 @@ const Communities = () => {
                 </div>
               </div>
               
-              <Button variant="brutal" size="lg" className="gap-2">
-                <Plus className="w-5 h-5" />
-                Create Community
-              </Button>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="brutal" size="lg" className="gap-2">
+                    <Plus className="w-5 h-5" />
+                    Create Community
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Create New Community</DialogTitle>
+                    <DialogDescription>
+                      Create a community to connect with students and share interests.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Community Name *</Label>
+                      <Input
+                        id="name"
+                        placeholder="Enter community name"
+                        value={newCommunity.name}
+                        onChange={(e) => setNewCommunity({...newCommunity, name: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Describe your community and its purpose"
+                        value={newCommunity.description}
+                        onChange={(e) => setNewCommunity({...newCommunity, description: e.target.value})}
+                        rows={3}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="type">Community Type</Label>
+                      <Select 
+                        value={newCommunity.type} 
+                        onValueChange={(value) => setNewCommunity({...newCommunity, type: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="student_club">Student Club</SelectItem>
+                          <SelectItem value="university_group">University Group</SelectItem>
+                          <SelectItem value="age_group">Age Group</SelectItem>
+                          <SelectItem value="interest_group">Interest Group</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="image_url">Community Image URL (Optional)</Label>
+                      <Input
+                        id="image_url"
+                        placeholder="https://example.com/image.jpg"
+                        value={newCommunity.image_url}
+                        onChange={(e) => setNewCommunity({...newCommunity, image_url: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="is_private"
+                        checked={newCommunity.is_private}
+                        onCheckedChange={(checked) => setNewCommunity({...newCommunity, is_private: checked})}
+                      />
+                      <Label htmlFor="is_private">Private Community</Label>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateCommunity}>
+                        Create Community
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Search */}
