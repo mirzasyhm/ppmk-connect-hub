@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Broadcast from "./pages/Broadcast";
 import Communities from "./pages/Communities";
+import CommunityDetail from "./pages/CommunityDetail";
 import { Marketplace } from "./pages/Marketplace";
 import { Events } from "./pages/Events";
 import { Messages } from "./pages/Messages";
@@ -84,6 +85,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/broadcast" element={<Broadcast />} />
             <Route path="/communities" element={<Communities />} />
+            <Route path="/communities/:id" element={<CommunityDetail />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/events" element={<Events />} />
             <Route path="/messages" element={<Messages />} />
