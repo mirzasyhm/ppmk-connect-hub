@@ -8,8 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Upload, Shield, Database, Search } from "lucide-react";
+import { Users, Upload, Shield, Database, Search, Eye, Edit } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import * as XLSX from 'xlsx';
 
@@ -28,6 +31,10 @@ const Admin = ({ user, session, profile }: AdminProps) => {
   const [generatedCredentials, setGeneratedCredentials] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -349,6 +356,82 @@ const Admin = ({ user, session, profile }: AdminProps) => {
     }
   };
 
+  const handleViewDetails = (user: any) => {
+    setSelectedUser(user);
+    setIsDetailDialogOpen(true);
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditingUser({ ...user });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingUser) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editingUser.full_name,
+          username: editingUser.username,
+          display_name: editingUser.display_name,
+          email: editingUser.email,
+          gender: editingUser.gender,
+          marital_status: editingUser.marital_status,
+          race: editingUser.race,
+          religion: editingUser.religion,
+          date_of_birth: editingUser.date_of_birth,
+          born_place: editingUser.born_place,
+          passport_number: editingUser.passport_number,
+          arc_number: editingUser.arc_number,
+          identity_card_number: editingUser.identity_card_number,
+          telephone_malaysia: editingUser.telephone_malaysia,
+          telephone_korea: editingUser.telephone_korea,
+          address_malaysia: editingUser.address_malaysia,
+          address_korea: editingUser.address_korea,
+          studying_place: editingUser.studying_place,
+          study_course: editingUser.study_course,
+          study_level: editingUser.study_level,
+          study_start_date: editingUser.study_start_date,
+          study_end_date: editingUser.study_end_date,
+          sponsorship: editingUser.sponsorship,
+          sponsorship_address: editingUser.sponsorship_address,
+          sponsorship_phone_number: editingUser.sponsorship_phone_number,
+          blood_type: editingUser.blood_type,
+          allergy: editingUser.allergy,
+          medical_condition: editingUser.medical_condition,
+          next_of_kin: editingUser.next_of_kin,
+          next_of_kin_relationship: editingUser.next_of_kin_relationship,
+          next_of_kin_contact_number: editingUser.next_of_kin_contact_number,
+          bio: editingUser.bio
+        })
+        .eq('user_id', editingUser.user_id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update user profile.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "User profile updated successfully.",
+        });
+        setIsEditDialogOpen(false);
+        await fetchAdminData();
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user profile.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Filter users based on search query
   const filteredUsers = users.filter(user => {
     if (!searchQuery) return true;
@@ -521,19 +604,39 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                             )}
                             {userRole === 'superadmin' && (
                               <TableCell>
-                                <Select
-                                  defaultValue={user.user_roles?.[0]?.role || 'member'}
-                                  onValueChange={(value) => updateUserRole(user.user_id, value)}
-                                >
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="member">Member</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="superadmin">Superadmin</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewDetails(user)}
+                                    className="gap-1"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    Detail
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEditUser(user)}
+                                    className="gap-1"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                    Edit
+                                  </Button>
+                                  <Select
+                                    defaultValue={user.user_roles?.[0]?.role || 'member'}
+                                    onValueChange={(value) => updateUserRole(user.user_id, value)}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="member">Member</SelectItem>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="superadmin">Superadmin</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </TableCell>
                             )}
                           </TableRow>
@@ -720,6 +823,447 @@ const Admin = ({ user, session, profile }: AdminProps) => {
           </Tabs>
         </div>
       </main>
+
+      {/* User Detail Dialog */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+            <DialogDescription>
+              Complete profile information for {selectedUser?.full_name || selectedUser?.display_name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <Label className="font-medium">Full Name</Label>
+                <p className="text-sm">{selectedUser.full_name || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Username</Label>
+                <p className="text-sm">{selectedUser.username || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Display Name</Label>
+                <p className="text-sm">{selectedUser.display_name || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Email</Label>
+                <p className="text-sm">{selectedUser.email || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Gender</Label>
+                <p className="text-sm">{selectedUser.gender || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Date of Birth</Label>
+                <p className="text-sm">{selectedUser.date_of_birth ? new Date(selectedUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Marital Status</Label>
+                <p className="text-sm">{selectedUser.marital_status || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Race</Label>
+                <p className="text-sm">{selectedUser.race || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Religion</Label>
+                <p className="text-sm">{selectedUser.religion || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Born Place</Label>
+                <p className="text-sm">{selectedUser.born_place || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Passport Number</Label>
+                <p className="text-sm">{selectedUser.passport_number || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">ARC Number</Label>
+                <p className="text-sm">{selectedUser.arc_number || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Identity Card Number</Label>
+                <p className="text-sm">{selectedUser.identity_card_number || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Phone (Malaysia)</Label>
+                <p className="text-sm">{selectedUser.telephone_malaysia || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Phone (Korea)</Label>
+                <p className="text-sm">{selectedUser.telephone_korea || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Address (Malaysia)</Label>
+                <p className="text-sm">{selectedUser.address_malaysia || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Address (Korea)</Label>
+                <p className="text-sm">{selectedUser.address_korea || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">University</Label>
+                <p className="text-sm">{selectedUser.studying_place || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Study Course</Label>
+                <p className="text-sm">{selectedUser.study_course || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Study Level</Label>
+                <p className="text-sm">{selectedUser.study_level || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Study Start Date</Label>
+                <p className="text-sm">{selectedUser.study_start_date ? new Date(selectedUser.study_start_date).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Study End Date</Label>
+                <p className="text-sm">{selectedUser.study_end_date ? new Date(selectedUser.study_end_date).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Sponsorship</Label>
+                <p className="text-sm">{selectedUser.sponsorship || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Sponsorship Address</Label>
+                <p className="text-sm">{selectedUser.sponsorship_address || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Sponsorship Phone</Label>
+                <p className="text-sm">{selectedUser.sponsorship_phone_number || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Blood Type</Label>
+                <p className="text-sm">{selectedUser.blood_type || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Allergy</Label>
+                <p className="text-sm">{selectedUser.allergy || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Medical Condition</Label>
+                <p className="text-sm">{selectedUser.medical_condition || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Next of Kin</Label>
+                <p className="text-sm">{selectedUser.next_of_kin || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Next of Kin Relationship</Label>
+                <p className="text-sm">{selectedUser.next_of_kin_relationship || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Next of Kin Contact</Label>
+                <p className="text-sm">{selectedUser.next_of_kin_contact_number || 'N/A'}</p>
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label className="font-medium">Bio</Label>
+                <p className="text-sm">{selectedUser.bio || 'N/A'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Role</Label>
+                <Badge variant={
+                  selectedUser.user_roles?.[0]?.role === 'superadmin' ? 'default' :
+                  selectedUser.user_roles?.[0]?.role === 'admin' ? 'secondary' : 'outline'
+                }>
+                  {selectedUser.user_roles?.[0]?.role || 'member'}
+                </Badge>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Joined</Label>
+                <p className="text-sm">{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : 'N/A'}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* User Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+            <DialogDescription>
+              Update profile information for {editingUser?.full_name || editingUser?.display_name}
+            </DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="full_name">Full Name</Label>
+                <Input
+                  id="full_name"
+                  value={editingUser.full_name || ''}
+                  onChange={(e) => setEditingUser({...editingUser, full_name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={editingUser.username || ''}
+                  onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="display_name">Display Name</Label>
+                <Input
+                  id="display_name"
+                  value={editingUser.display_name || ''}
+                  onChange={(e) => setEditingUser({...editingUser, display_name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editingUser.email || ''}
+                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Input
+                  id="gender"
+                  value={editingUser.gender || ''}
+                  onChange={(e) => setEditingUser({...editingUser, gender: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date_of_birth">Date of Birth</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  value={editingUser.date_of_birth || ''}
+                  onChange={(e) => setEditingUser({...editingUser, date_of_birth: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marital_status">Marital Status</Label>
+                <Input
+                  id="marital_status"
+                  value={editingUser.marital_status || ''}
+                  onChange={(e) => setEditingUser({...editingUser, marital_status: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="race">Race</Label>
+                <Input
+                  id="race"
+                  value={editingUser.race || ''}
+                  onChange={(e) => setEditingUser({...editingUser, race: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="religion">Religion</Label>
+                <Input
+                  id="religion"
+                  value={editingUser.religion || ''}
+                  onChange={(e) => setEditingUser({...editingUser, religion: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="born_place">Born Place</Label>
+                <Input
+                  id="born_place"
+                  value={editingUser.born_place || ''}
+                  onChange={(e) => setEditingUser({...editingUser, born_place: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passport_number">Passport Number</Label>
+                <Input
+                  id="passport_number"
+                  value={editingUser.passport_number || ''}
+                  onChange={(e) => setEditingUser({...editingUser, passport_number: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="arc_number">ARC Number</Label>
+                <Input
+                  id="arc_number"
+                  value={editingUser.arc_number || ''}
+                  onChange={(e) => setEditingUser({...editingUser, arc_number: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="identity_card_number">Identity Card Number</Label>
+                <Input
+                  id="identity_card_number"
+                  value={editingUser.identity_card_number || ''}
+                  onChange={(e) => setEditingUser({...editingUser, identity_card_number: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="telephone_malaysia">Phone (Malaysia)</Label>
+                <Input
+                  id="telephone_malaysia"
+                  value={editingUser.telephone_malaysia || ''}
+                  onChange={(e) => setEditingUser({...editingUser, telephone_malaysia: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="telephone_korea">Phone (Korea)</Label>
+                <Input
+                  id="telephone_korea"
+                  value={editingUser.telephone_korea || ''}
+                  onChange={(e) => setEditingUser({...editingUser, telephone_korea: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address_malaysia">Address (Malaysia)</Label>
+                <Textarea
+                  id="address_malaysia"
+                  value={editingUser.address_malaysia || ''}
+                  onChange={(e) => setEditingUser({...editingUser, address_malaysia: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address_korea">Address (Korea)</Label>
+                <Textarea
+                  id="address_korea"
+                  value={editingUser.address_korea || ''}
+                  onChange={(e) => setEditingUser({...editingUser, address_korea: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="studying_place">University</Label>
+                <Input
+                  id="studying_place"
+                  value={editingUser.studying_place || ''}
+                  onChange={(e) => setEditingUser({...editingUser, studying_place: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="study_course">Study Course</Label>
+                <Input
+                  id="study_course"
+                  value={editingUser.study_course || ''}
+                  onChange={(e) => setEditingUser({...editingUser, study_course: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="study_level">Study Level</Label>
+                <Input
+                  id="study_level"
+                  value={editingUser.study_level || ''}
+                  onChange={(e) => setEditingUser({...editingUser, study_level: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="study_start_date">Study Start Date</Label>
+                <Input
+                  id="study_start_date"
+                  type="date"
+                  value={editingUser.study_start_date || ''}
+                  onChange={(e) => setEditingUser({...editingUser, study_start_date: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="study_end_date">Study End Date</Label>
+                <Input
+                  id="study_end_date"
+                  type="date"
+                  value={editingUser.study_end_date || ''}
+                  onChange={(e) => setEditingUser({...editingUser, study_end_date: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sponsorship">Sponsorship</Label>
+                <Input
+                  id="sponsorship"
+                  value={editingUser.sponsorship || ''}
+                  onChange={(e) => setEditingUser({...editingUser, sponsorship: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sponsorship_address">Sponsorship Address</Label>
+                <Textarea
+                  id="sponsorship_address"
+                  value={editingUser.sponsorship_address || ''}
+                  onChange={(e) => setEditingUser({...editingUser, sponsorship_address: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sponsorship_phone_number">Sponsorship Phone</Label>
+                <Input
+                  id="sponsorship_phone_number"
+                  value={editingUser.sponsorship_phone_number || ''}
+                  onChange={(e) => setEditingUser({...editingUser, sponsorship_phone_number: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="blood_type">Blood Type</Label>
+                <Input
+                  id="blood_type"
+                  value={editingUser.blood_type || ''}
+                  onChange={(e) => setEditingUser({...editingUser, blood_type: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="allergy">Allergy</Label>
+                <Input
+                  id="allergy"
+                  value={editingUser.allergy || ''}
+                  onChange={(e) => setEditingUser({...editingUser, allergy: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="medical_condition">Medical Condition</Label>
+                <Input
+                  id="medical_condition"
+                  value={editingUser.medical_condition || ''}
+                  onChange={(e) => setEditingUser({...editingUser, medical_condition: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="next_of_kin">Next of Kin</Label>
+                <Input
+                  id="next_of_kin"
+                  value={editingUser.next_of_kin || ''}
+                  onChange={(e) => setEditingUser({...editingUser, next_of_kin: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="next_of_kin_relationship">Next of Kin Relationship</Label>
+                <Input
+                  id="next_of_kin_relationship"
+                  value={editingUser.next_of_kin_relationship || ''}
+                  onChange={(e) => setEditingUser({...editingUser, next_of_kin_relationship: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="next_of_kin_contact_number">Next of Kin Contact</Label>
+                <Input
+                  id="next_of_kin_contact_number"
+                  value={editingUser.next_of_kin_contact_number || ''}
+                  onChange={(e) => setEditingUser({...editingUser, next_of_kin_contact_number: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={editingUser.bio || ''}
+                  onChange={(e) => setEditingUser({...editingUser, bio: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
