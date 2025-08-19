@@ -6,6 +6,7 @@ import { ShoppingCart, DollarSign, Clock, MessageCircle, User } from "lucide-rea
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface MarketplaceCardProps {
   item: {
@@ -24,38 +25,96 @@ interface MarketplaceCardProps {
 }
 
 export const MarketplaceCard = ({ item }: MarketplaceCardProps) => {
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const fetchSellerProfile = async () => {
-    if (sellerProfile || loading) return;
-    
+  const handleContactSeller = async () => {
     setLoading(true);
+    
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", item.seller_id)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error("Error fetching seller profile:", error);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to contact the seller.",
+          variant: "destructive",
+        });
         return;
       }
 
-      setSellerProfile(data);
-    } catch (error) {
-      console.error("Error fetching seller profile:", error);
+      // Don't allow users to message themselves
+      if (user.id === item.seller_id) {
+        toast({
+          title: "Cannot contact yourself",
+          description: "You cannot message your own listing.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if conversation already exists
+      const { data: existingConversation, error: convError } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${item.seller_id}),and(participant_1.eq.${item.seller_id},participant_2.eq.${user.id})`)
+        .maybeSingle();
+
+      if (convError && convError.code !== 'PGRST116') {
+        console.error("Error checking existing conversation:", convError);
+        throw convError;
+      }
+
+      let conversationId = existingConversation?.id;
+
+      // Create new conversation if doesn't exist
+      if (!conversationId) {
+        const { data: newConversation, error: createError } = await supabase
+          .from("conversations")
+          .insert({
+            participant_1: user.id,
+            participant_2: item.seller_id
+          })
+          .select("id")
+          .single();
+
+        if (createError) {
+          console.error("Error creating conversation:", createError);
+          throw createError;
+        }
+
+        conversationId = newConversation.id;
+
+        // Send initial message about the item
+        await supabase
+          .from("messages")
+          .insert({
+            conversation_id: conversationId,
+            sender_id: user.id,
+            content: `Hi! I'm interested in your listing: ${item.title} (${item.currency === 'USD' ? '$' : item.currency}${item.price})`,
+            message_type: "text"
+          });
+      }
+
+      // Navigate to messages page
+      navigate("/messages");
+      
+      toast({
+        title: "Message started",
+        description: "Opening conversation with seller...",
+      });
+
+    } catch (error: any) {
+      console.error("Error starting conversation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation with seller.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleContactSeller = () => {
-    fetchSellerProfile();
-    setIsContactOpen(true);
   };
   const getConditionColor = (condition: string) => {
     switch (condition) {
@@ -126,79 +185,24 @@ export const MarketplaceCard = ({ item }: MarketplaceCardProps) => {
           </div>
           
           {item.status === 'available' && (
-            <Dialog open={isContactOpen} onOpenChange={setIsContactOpen}>
-              <DialogTrigger asChild>
-                <Button variant="brutal" className="font-bold uppercase" onClick={handleContactSeller}>
+            <Button 
+              variant="brutal" 
+              className="font-bold uppercase" 
+              onClick={handleContactSeller}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin mr-2" />
+                  Starting...
+                </>
+              ) : (
+                <>
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Contact Seller
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Contact Seller</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="border border-foreground rounded p-4">
-                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Price: {item.currency === 'USD' ? '$' : item.currency}{item.price}
-                    </p>
-                    
-                    {loading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-sm text-muted-foreground">Loading seller info...</span>
-                      </div>
-                    ) : sellerProfile ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-muted border border-foreground rounded flex items-center justify-center">
-                            <User className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {sellerProfile.display_name || sellerProfile.full_name || 'Seller'}
-                            </p>
-                            {sellerProfile.email && (
-                              <p className="text-sm text-muted-foreground">{sellerProfile.email}</p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Contact Information:</h4>
-                          <div className="text-sm space-y-1">
-                            {sellerProfile.email && (
-                              <p><strong>Email:</strong> {sellerProfile.email}</p>
-                            )}
-                            {sellerProfile.telephone_korea && (
-                              <p><strong>Phone (Korea):</strong> {sellerProfile.telephone_korea}</p>
-                            )}
-                            {sellerProfile.telephone_malaysia && (
-                              <p><strong>Phone (Malaysia):</strong> {sellerProfile.telephone_malaysia}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className="text-muted-foreground">Unable to load seller information</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => setIsContactOpen(false)} 
-                      variant="outline" 
-                      className="flex-1"
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                  Message Seller
+                </>
+              )}
+            </Button>
           )}
         </div>
       </CardContent>
