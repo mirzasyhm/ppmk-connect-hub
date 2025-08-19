@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { User, Calendar, MapPin, GraduationCap, Heart, Phone, Mail, FileText, AlertTriangle, Settings, X, Save } from "lucide-react";
-import { Sidebar } from "@/components/Sidebar";
 
 interface ProfileFormData {
   full_name: string;
@@ -142,17 +141,14 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <div className="flex-1 p-6 max-w-6xl mx-auto">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-            <p className="text-muted-foreground">
-              {isEditing ? "Edit your personal information" : "View your personal information and preferences"}
-            </p>
-          </div>
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+          <p className="text-muted-foreground">
+            {isEditing ? "Edit your personal information" : "View your personal information and preferences"}
+          </p>
+        </div>
           <div className="flex gap-2">
             {!isEditing ? (
               <Button 
@@ -185,11 +181,11 @@ export default function Profile() {
                   {loading ? "Saving..." : "Save Changes"}
                 </Button>
               </>
-            )}
-          </div>
-        </div>
+        )}
+      </div>
+    </div>
 
-        <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* Personal Information */}
         <Card>
           <CardHeader>
@@ -704,8 +700,7 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        </form>
-      </div>
+    </form>
     </div>
   );
 }

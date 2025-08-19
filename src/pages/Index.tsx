@@ -196,54 +196,50 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar user={user} session={session} profile={profile} />
-      
-      <main className="flex-1 p-6 max-w-2xl mx-auto">
-        <div className="space-y-6">
-          <CreatePost 
-            profile={profile} 
-            currentUserId={user.id} 
-            onPostCreated={fetchFeed}
-          />
-          
-          <div className="space-y-4">
-            {feedItems.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">
-                  No content yet. Be the first to share something!
-                </p>
-              </div>
-            ) : (
-              feedItems.map((item) => {
-                switch (item.type) {
-                  case 'post':
-                    return (
-                      <PostCard
-                        key={item.id}
-                        post={item}
-                        currentUserId={user.id}
-                        onLikeUpdate={fetchFeed}
-                      />
-                    );
-                  case 'broadcast':
-                    return <BroadcastCard key={item.id} broadcast={item} />;
-                  case 'marketplace':
-                    return <MarketplaceCard key={item.id} item={item} />;
-                  case 'event':
-                    return <EventCard key={item.id} event={item} />;
-                  case 'community':
-                    return <CommunityCard key={item.id} community={item} />;
-                  case 'community_post':
-                    return <CommunityPostCard key={item.id} post={item} />;
-                  default:
-                    return null;
-                }
-              })
-            )}
-          </div>
+    <div className="p-6 max-w-2xl mx-auto">
+      <div className="space-y-6">
+        <CreatePost 
+          profile={profile} 
+          currentUserId={user.id} 
+          onPostCreated={fetchFeed}
+        />
+        
+        <div className="space-y-4">
+          {feedItems.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">
+                No content yet. Be the first to share something!
+              </p>
+            </div>
+          ) : (
+            feedItems.map((item) => {
+              switch (item.type) {
+                case 'post':
+                  return (
+                    <PostCard
+                      key={item.id}
+                      post={item}
+                      currentUserId={user.id}
+                      onLikeUpdate={fetchFeed}
+                    />
+                  );
+                case 'broadcast':
+                  return <BroadcastCard key={item.id} broadcast={item} />;
+                case 'marketplace':
+                  return <MarketplaceCard key={item.id} item={item} />;
+                case 'event':
+                  return <EventCard key={item.id} event={item} />;
+                case 'community':
+                  return <CommunityCard key={item.id} community={item} />;
+                case 'community_post':
+                  return <CommunityPostCard key={item.id} post={item} />;
+                default:
+                  return null;
+              }
+            })
+          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 };

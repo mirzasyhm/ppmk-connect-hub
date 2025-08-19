@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Sidebar } from "@/components/Sidebar";
 import Index from "./pages/Index";
 import Broadcast from "./pages/Broadcast";
 import Communities from "./pages/Communities";
@@ -76,6 +77,22 @@ const App = () => {
     }
   };
 
+  // Layout wrapper component for authenticated pages
+  const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+    if (!user || !session) {
+      return <Index />;
+    }
+
+    return (
+      <div className="min-h-screen bg-background flex">
+        <Sidebar user={user} session={session} profile={profile} />
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
+    );
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -84,15 +101,51 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/broadcast" element={<Broadcast />} />
-            <Route path="/communities" element={<Communities />} />
-            <Route path="/communities/:id" element={<CommunityDetail />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<Admin user={user} session={session} profile={profile} />} />
-            <Route path="/settings" element={<Settings user={user} />} />
+            <Route path="/broadcast" element={
+              <AuthenticatedLayout>
+                <Broadcast />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/communities" element={
+              <AuthenticatedLayout>
+                <Communities />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/communities/:id" element={
+              <AuthenticatedLayout>
+                <CommunityDetail />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/marketplace" element={
+              <AuthenticatedLayout>
+                <Marketplace />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/events" element={
+              <AuthenticatedLayout>
+                <Events />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/messages" element={
+              <AuthenticatedLayout>
+                <Messages />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/profile" element={
+              <AuthenticatedLayout>
+                <Profile />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/admin" element={
+              <AuthenticatedLayout>
+                <Admin user={user} session={session} profile={profile} />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/settings" element={
+              <AuthenticatedLayout>
+                <Settings user={user} />
+              </AuthenticatedLayout>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
