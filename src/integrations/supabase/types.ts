@@ -728,6 +728,84 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          created_at: string
+          feedback: string | null
+          id: string
+          status: string
+          suggestion: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          status?: string
+          suggestion?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          status?: string
+          suggestion?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notification_settings: {
+        Row: {
+          broadcast_normal: boolean
+          broadcast_urgent: boolean
+          communities_general: boolean
+          created_at: string
+          events_new: boolean
+          events_reminder_timing: string
+          events_reminders: boolean
+          id: string
+          marketplace_currency: boolean
+          marketplace_items: boolean
+          messages_general: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          broadcast_normal?: boolean
+          broadcast_urgent?: boolean
+          communities_general?: boolean
+          created_at?: string
+          events_new?: boolean
+          events_reminder_timing?: string
+          events_reminders?: boolean
+          id?: string
+          marketplace_currency?: boolean
+          marketplace_items?: boolean
+          messages_general?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          broadcast_normal?: boolean
+          broadcast_urgent?: boolean
+          communities_general?: boolean
+          created_at?: string
+          events_new?: boolean
+          events_reminder_timing?: string
+          events_reminders?: boolean
+          id?: string
+          marketplace_currency?: boolean
+          marketplace_items?: boolean
+          messages_general?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string
