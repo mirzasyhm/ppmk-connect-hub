@@ -262,29 +262,31 @@ export const Messages = () => {
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10 border-2 border-foreground">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3 w-full">
+                        <Avatar className="w-10 h-10 border-2 border-foreground flex-shrink-0">
                           <AvatarImage src={conversation.other_user?.avatar_url} />
                           <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                             {conversation.other_user?.display_name?.charAt(0) || "U"}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold truncate">
-                            {conversation.other_user?.display_name || "Unknown User"}
-                          </p>
-                          <p className="text-sm opacity-70 truncate">
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold truncate text-sm">
+                              {conversation.other_user?.display_name || "Unknown User"}
+                            </p>
+                            <div className="text-xs opacity-70 flex-shrink-0">
+                              {conversation.last_message_at && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(conversation.last_message_at).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs opacity-70 truncate mt-1">
                             {conversation.last_message?.content || "No messages yet"}
                           </p>
-                        </div>
-                        <div className="text-xs opacity-70">
-                          {conversation.last_message_at && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(conversation.last_message_at).toLocaleDateString()}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </CardContent>
