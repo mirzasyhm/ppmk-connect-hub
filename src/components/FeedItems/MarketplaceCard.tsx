@@ -1,7 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, DollarSign, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ShoppingCart, DollarSign, Clock, MessageCircle, User } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MarketplaceCardProps {
   item: {
@@ -15,10 +19,44 @@ interface MarketplaceCardProps {
     status: string;
     created_at: string;
     image_url?: string;
+    seller_id: string;
   };
 }
 
 export const MarketplaceCard = ({ item }: MarketplaceCardProps) => {
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const [sellerProfile, setSellerProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const fetchSellerProfile = async () => {
+    if (sellerProfile || loading) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", item.seller_id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching seller profile:", error);
+        return;
+      }
+
+      setSellerProfile(data);
+    } catch (error) {
+      console.error("Error fetching seller profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContactSeller = () => {
+    fetchSellerProfile();
+    setIsContactOpen(true);
+  };
   const getConditionColor = (condition: string) => {
     switch (condition) {
       case 'new': return 'bg-primary text-primary-foreground';
@@ -88,9 +126,79 @@ export const MarketplaceCard = ({ item }: MarketplaceCardProps) => {
           </div>
           
           {item.status === 'available' && (
-            <Button variant="brutal" className="font-bold uppercase">
-              Contact Seller
-            </Button>
+            <Dialog open={isContactOpen} onOpenChange={setIsContactOpen}>
+              <DialogTrigger asChild>
+                <Button variant="brutal" className="font-bold uppercase" onClick={handleContactSeller}>
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Contact Seller
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Contact Seller</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="border border-foreground rounded p-4">
+                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Price: {item.currency === 'USD' ? '$' : item.currency}{item.price}
+                    </p>
+                    
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm text-muted-foreground">Loading seller info...</span>
+                      </div>
+                    ) : sellerProfile ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-muted border border-foreground rounded flex items-center justify-center">
+                            <User className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {sellerProfile.display_name || sellerProfile.full_name || 'Seller'}
+                            </p>
+                            {sellerProfile.email && (
+                              <p className="text-sm text-muted-foreground">{sellerProfile.email}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h4 className="font-medium">Contact Information:</h4>
+                          <div className="text-sm space-y-1">
+                            {sellerProfile.email && (
+                              <p><strong>Email:</strong> {sellerProfile.email}</p>
+                            )}
+                            {sellerProfile.telephone_korea && (
+                              <p><strong>Phone (Korea):</strong> {sellerProfile.telephone_korea}</p>
+                            )}
+                            {sellerProfile.telephone_malaysia && (
+                              <p><strong>Phone (Malaysia):</strong> {sellerProfile.telephone_malaysia}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">Unable to load seller information</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => setIsContactOpen(false)} 
+                      variant="outline" 
+                      className="flex-1"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </CardContent>
