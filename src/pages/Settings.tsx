@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Bell, MessageSquare, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,7 @@ interface NotificationSettings {
   marketplace_currency: boolean;
   events_new: boolean;
   events_reminders: boolean;
-  events_reminder_timing: string;
+  events_reminder_timings: string[];
   messages_general: boolean;
 }
 
@@ -37,7 +37,7 @@ export const Settings = ({ user }: SettingsProps) => {
     marketplace_currency: true,
     events_new: true,
     events_reminders: true,
-    events_reminder_timing: "1_week",
+    events_reminder_timings: ["1_week"],
     messages_general: true,
   });
   const [feedback, setFeedback] = useState("");
@@ -66,7 +66,7 @@ export const Settings = ({ user }: SettingsProps) => {
     }
   };
 
-  const updateNotificationSetting = async (key: keyof NotificationSettings, value: boolean | string) => {
+  const updateNotificationSetting = async (key: keyof NotificationSettings, value: boolean | string | string[]) => {
     try {
       const updatedSettings = { ...notificationSettings, [key]: value };
       setNotificationSettings(updatedSettings);
@@ -94,6 +94,23 @@ export const Settings = ({ user }: SettingsProps) => {
         variant: "destructive",
       });
     }
+    };
+
+  const handleReminderTimingChange = (timing: string, checked: boolean) => {
+    const currentTimings = notificationSettings.events_reminder_timings;
+    let newTimings: string[];
+    
+    if (checked) {
+      // Add timing if not already present
+      newTimings = currentTimings.includes(timing) 
+        ? currentTimings 
+        : [...currentTimings, timing];
+    } else {
+      // Remove timing
+      newTimings = currentTimings.filter(t => t !== timing);
+    }
+    
+    updateNotificationSetting('events_reminder_timings', newTimings);
   };
 
   const submitFeedback = async () => {
@@ -250,25 +267,35 @@ export const Settings = ({ user }: SettingsProps) => {
                 />
               </div>
               {notificationSettings.events_reminders && (
-                <div className="pl-4">
-                  <Label htmlFor="reminder-timing">Reminder timing for joined events</Label>
-                  <Select
-                    value={notificationSettings.events_reminder_timing}
-                    onValueChange={(value) => updateNotificationSetting('events_reminder_timing', value)}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="4_weeks">4 weeks before</SelectItem>
-                      <SelectItem value="3_weeks">3 weeks before</SelectItem>
-                      <SelectItem value="2_weeks">2 weeks before</SelectItem>
-                      <SelectItem value="1_week">1 week before</SelectItem>
-                      <SelectItem value="3_days">3 days before</SelectItem>
-                      <SelectItem value="1_day">1 day before</SelectItem>
-                      <SelectItem value="same_day">Same day</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="pl-4 space-y-3">
+                  <Label>Reminder timing for joined events (select multiple)</Label>
+                  <div className="space-y-2">
+                    {[
+                      { value: "4_weeks", label: "4 weeks before" },
+                      { value: "3_weeks", label: "3 weeks before" },
+                      { value: "2_weeks", label: "2 weeks before" },
+                      { value: "1_week", label: "1 week before" },
+                      { value: "3_days", label: "3 days before" },
+                      { value: "1_day", label: "1 day before" },
+                      { value: "same_day", label: "Same day" }
+                    ].map((option) => (
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`timing-${option.value}`}
+                          checked={notificationSettings.events_reminder_timings.includes(option.value)}
+                          onCheckedChange={(checked) => 
+                            handleReminderTimingChange(option.value, checked as boolean)
+                          }
+                        />
+                        <Label 
+                          htmlFor={`timing-${option.value}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

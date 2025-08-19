@@ -765,7 +765,7 @@ export type Database = {
           communities_general: boolean
           created_at: string
           events_new: boolean
-          events_reminder_timing: string
+          events_reminder_timings: string[] | null
           events_reminders: boolean
           id: string
           marketplace_currency: boolean
@@ -780,7 +780,7 @@ export type Database = {
           communities_general?: boolean
           created_at?: string
           events_new?: boolean
-          events_reminder_timing?: string
+          events_reminder_timings?: string[] | null
           events_reminders?: boolean
           id?: string
           marketplace_currency?: boolean
@@ -795,7 +795,7 @@ export type Database = {
           communities_general?: boolean
           created_at?: string
           events_new?: boolean
-          events_reminder_timing?: string
+          events_reminder_timings?: string[] | null
           events_reminders?: boolean
           id?: string
           marketplace_currency?: boolean
