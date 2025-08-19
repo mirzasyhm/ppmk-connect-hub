@@ -52,14 +52,14 @@ export const Settings = ({ user }: SettingsProps) => {
 
   const loadNotificationSettings = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_notification_settings')
         .select('*')
         .eq('user_id', user?.id)
         .single();
 
       if (data && !error) {
-        setNotificationSettings(data);
+        setNotificationSettings(data as NotificationSettings);
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
@@ -71,7 +71,7 @@ export const Settings = ({ user }: SettingsProps) => {
       const updatedSettings = { ...notificationSettings, [key]: value };
       setNotificationSettings(updatedSettings);
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_notification_settings')
         .upsert({
           user_id: user?.id,
@@ -108,7 +108,7 @@ export const Settings = ({ user }: SettingsProps) => {
 
     setSubmittingFeedback(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_feedback')
         .insert({
           user_id: user?.id,
