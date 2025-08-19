@@ -474,13 +474,13 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                           <TableHead>Email</TableHead>
                           <TableHead>Username</TableHead>
                           <TableHead>Gender</TableHead>
-                          <TableHead>Date of Birth</TableHead>
-                          <TableHead>Study Course</TableHead>
+                          {userRole === 'superadmin' && <TableHead>Date of Birth</TableHead>}
+                          <TableHead>University</TableHead>
                           <TableHead>Study Level</TableHead>
-                          <TableHead>Phone (MY)</TableHead>
-                          <TableHead>Phone (KR)</TableHead>
+                          {userRole === 'superadmin' && <TableHead>Phone (MY)</TableHead>}
+                          {userRole === 'superadmin' && <TableHead>Phone (KR)</TableHead>}
                           <TableHead>Role</TableHead>
-                          <TableHead>Joined</TableHead>
+                          {userRole === 'superadmin' && <TableHead>Joined</TableHead>}
                           {userRole === 'superadmin' && <TableHead>Actions</TableHead>}
                         </TableRow>
                       </TableHeader>
@@ -493,13 +493,19 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                             <TableCell>{user.email || 'N/A'}</TableCell>
                             <TableCell>{user.username || 'N/A'}</TableCell>
                             <TableCell>{user.gender || 'N/A'}</TableCell>
-                            <TableCell>
-                              {user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : 'N/A'}
-                            </TableCell>
-                            <TableCell>{user.study_course || 'N/A'}</TableCell>
+                            {userRole === 'superadmin' && (
+                              <TableCell>
+                                {user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : 'N/A'}
+                              </TableCell>
+                            )}
+                            <TableCell>{user.studying_place || 'N/A'}</TableCell>
                             <TableCell>{user.study_level || 'N/A'}</TableCell>
-                            <TableCell>{user.telephone_malaysia || 'N/A'}</TableCell>
-                            <TableCell>{user.telephone_korea || 'N/A'}</TableCell>
+                            {userRole === 'superadmin' && (
+                              <TableCell>{user.telephone_malaysia || 'N/A'}</TableCell>
+                            )}
+                            {userRole === 'superadmin' && (
+                              <TableCell>{user.telephone_korea || 'N/A'}</TableCell>
+                            )}
                             <TableCell>
                               <Badge variant={
                                 user.user_roles?.[0]?.role === 'superadmin' ? 'default' :
@@ -508,9 +514,11 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                                 {user.user_roles?.[0]?.role || 'member'}
                               </Badge>
                             </TableCell>
-                            <TableCell>
-                              {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-                            </TableCell>
+                            {userRole === 'superadmin' && (
+                              <TableCell>
+                                {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                              </TableCell>
+                            )}
                             {userRole === 'superadmin' && (
                               <TableCell>
                                 <Select
