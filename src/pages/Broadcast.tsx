@@ -4,7 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/Sidebar";
 import { BroadcastCard } from "@/components/FeedItems/BroadcastCard";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Megaphone, Plus, Edit, Trash2 } from "lucide-react";
 
 const Broadcast = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -12,6 +18,16 @@ const Broadcast = () => {
   const [profile, setProfile] = useState<any>(null);
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingBroadcast, setEditingBroadcast] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    priority: 'normal',
+    image_url: ''
+  });
+  const { toast } = useToast();
 
   useEffect(() => {
     // Set up auth state listener
@@ -62,9 +78,30 @@ const Broadcast = () => {
       }
       
       setProfile(data);
+      fetchUserRole(userId);
       fetchBroadcasts();
     } catch (error) {
       console.error("Error fetching profile:", error);
+    }
+  };
+
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching user role:", error);
+        return;
+      }
+      
+      setUserRole(data?.role || 'member');
+    } catch (error) {
+      console.error("Error fetching user role:", error);
+      setUserRole('member');
     }
   };
 
@@ -81,6 +118,135 @@ const Broadcast = () => {
       console.error("Error fetching broadcasts:", error);
     }
   };
+
+  const handleCreateBroadcast = async () => {
+    if (!user || !formData.title || !formData.content) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("broadcasts")
+        .insert([
+          {
+            title: formData.title,
+            content: formData.content,
+            priority: formData.priority,
+            image_url: formData.image_url || null,
+            created_by: user.id
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Broadcast created successfully"
+      });
+
+      setIsDialogOpen(false);
+      setFormData({ title: '', content: '', priority: 'normal', image_url: '' });
+      fetchBroadcasts();
+    } catch (error) {
+      console.error("Error creating broadcast:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create broadcast",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateBroadcast = async () => {
+    if (!editingBroadcast || !formData.title || !formData.content) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("broadcasts")
+        .update({
+          title: formData.title,
+          content: formData.content,
+          priority: formData.priority,
+          image_url: formData.image_url || null
+        })
+        .eq("id", editingBroadcast.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Broadcast updated successfully"
+      });
+
+      setIsDialogOpen(false);
+      setEditingBroadcast(null);
+      setFormData({ title: '', content: '', priority: 'normal', image_url: '' });
+      fetchBroadcasts();
+    } catch (error) {
+      console.error("Error updating broadcast:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update broadcast",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteBroadcast = async (broadcastId: string) => {
+    try {
+      const { error } = await supabase
+        .from("broadcasts")
+        .delete()
+        .eq("id", broadcastId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Broadcast deleted successfully"
+      });
+
+      fetchBroadcasts();
+    } catch (error) {
+      console.error("Error deleting broadcast:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete broadcast",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openCreateDialog = () => {
+    setEditingBroadcast(null);
+    setFormData({ title: '', content: '', priority: 'normal', image_url: '' });
+    setIsDialogOpen(true);
+  };
+
+  const openEditDialog = (broadcast: any) => {
+    setEditingBroadcast(broadcast);
+    setFormData({
+      title: broadcast.title,
+      content: broadcast.content,
+      priority: broadcast.priority,
+      image_url: broadcast.image_url || ''
+    });
+    setIsDialogOpen(true);
+  };
+
+  const isAdmin = userRole === 'admin' || userRole === 'superadmin';
 
   if (loading) {
     return (
@@ -129,11 +295,88 @@ const Broadcast = () => {
                 </div>
               </div>
               
-              {/* Only show create button for admins - you can add role check here */}
-              <Button variant="brutal" size="lg" className="gap-2">
-                <Plus className="w-5 h-5" />
-                New Broadcast
-              </Button>
+              {/* Only show create button for admins */}
+              {isAdmin && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="brutal" size="lg" className="gap-2" onClick={openCreateDialog}>
+                      <Plus className="w-5 h-5" />
+                      New Broadcast
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-bold uppercase">
+                        {editingBroadcast ? 'Edit Broadcast' : 'Create New Broadcast'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="title" className="text-sm font-bold uppercase">Title *</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="Enter broadcast title"
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="content" className="text-sm font-bold uppercase">Content *</Label>
+                        <Textarea
+                          id="content"
+                          value={formData.content}
+                          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                          placeholder="Enter broadcast content"
+                          rows={4}
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="priority" className="text-sm font-bold uppercase">Priority</Label>
+                        <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="image_url" className="text-sm font-bold uppercase">Image URL (Optional)</Label>
+                        <Input
+                          id="image_url"
+                          value={formData.image_url}
+                          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                          placeholder="Enter image URL"
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2 pt-4">
+                        <Button 
+                          onClick={editingBroadcast ? handleUpdateBroadcast : handleCreateBroadcast}
+                          className="flex-1"
+                        >
+                          {editingBroadcast ? 'Update' : 'Create'} Broadcast
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </div>
 
@@ -145,7 +388,13 @@ const Broadcast = () => {
             {broadcasts
               .filter(broadcast => broadcast.priority === 'urgent' || broadcast.priority === 'high')
               .map((broadcast) => (
-                <BroadcastCard key={broadcast.id} broadcast={broadcast} />
+                <BroadcastCard 
+                  key={broadcast.id} 
+                  broadcast={broadcast} 
+                  isAdmin={isAdmin}
+                  onEdit={openEditDialog}
+                  onDelete={handleDeleteBroadcast}
+                />
               ))}
             
             {broadcasts.filter(b => b.priority === 'urgent' || b.priority === 'high').length === 0 && (
@@ -174,7 +423,13 @@ const Broadcast = () => {
               </div>
             ) : (
               broadcasts.map((broadcast) => (
-                <BroadcastCard key={broadcast.id} broadcast={broadcast} />
+                <BroadcastCard 
+                  key={broadcast.id} 
+                  broadcast={broadcast} 
+                  isAdmin={isAdmin}
+                  onEdit={openEditDialog}
+                  onDelete={handleDeleteBroadcast}
+                />
               ))
             )}
           </div>

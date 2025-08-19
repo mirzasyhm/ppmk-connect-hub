@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Megaphone, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Megaphone, Clock, Edit, Trash2 } from "lucide-react";
 
 interface BroadcastCardProps {
   broadcast: {
@@ -11,9 +12,12 @@ interface BroadcastCardProps {
     created_at: string;
     image_url?: string;
   };
+  isAdmin?: boolean;
+  onEdit?: (broadcast: any) => void;
+  onDelete?: (broadcastId: string) => void;
 }
 
-export const BroadcastCard = ({ broadcast }: BroadcastCardProps) => {
+export const BroadcastCard = ({ broadcast, isAdmin, onEdit, onDelete }: BroadcastCardProps) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-destructive text-destructive-foreground';
@@ -50,9 +54,34 @@ export const BroadcastCard = ({ broadcast }: BroadcastCardProps) => {
         
         <p className="text-foreground leading-relaxed">{broadcast.content}</p>
         
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          {new Date(broadcast.created_at).toLocaleDateString()}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            {new Date(broadcast.created_at).toLocaleDateString()}
+          </div>
+          
+          {isAdmin && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit?.(broadcast)}
+                className="gap-1"
+              >
+                <Edit className="w-3 h-3" />
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete?.(broadcast.id)}
+                className="gap-1"
+              >
+                <Trash2 className="w-3 h-3" />
+                Delete
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
