@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, Send, Plus, Search, Clock } from "lucide-react";
 import { toast } from "sonner";
-
 interface Conversation {
   id: string;
   participant_1: string;
@@ -27,7 +26,6 @@ interface Conversation {
   };
   unread_count?: number;
 }
-
 interface Message {
   id: string;
   content: string;
@@ -39,7 +37,6 @@ interface Message {
     avatar_url?: string;
   };
 }
-
 export const Messages = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -51,97 +48,83 @@ export const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
+    const {
+      data: {
+        subscription
       }
-    );
-
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+    });
     return () => subscription.unsubscribe();
   }, []);
-
   useEffect(() => {
     if (user) {
       fetchConversations();
     }
   }, [user]);
-
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation);
     }
   }, [selectedConversation]);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
       if (error) throw error;
       setProfile(data);
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
   };
-
   const fetchConversations = async () => {
     if (!user) return;
-
     try {
       // Fetch conversations with the other participant's profile info
-      const { data, error } = await supabase
-        .from("conversations")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("conversations").select(`
           *,
           messages (
             content,
             sender_id,
             created_at
           )
-        `)
-        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
-        .order("last_message_at", { ascending: false });
-
+        `).or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`).order("last_message_at", {
+        ascending: false
+      });
       if (error) throw error;
 
       // Get profile info for other participants
-      const conversationsWithProfiles = await Promise.all(
-        (data || []).map(async (conv) => {
-          const otherUserId = conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1;
-          
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("display_name, username, avatar_url")
-            .eq("user_id", otherUserId)
-            .single();
-
-          const lastMessage = conv.messages?.[conv.messages.length - 1];
-
-          return {
-            ...conv,
-            other_user: profileData || { display_name: "Unknown User", username: "unknown" },
-            last_message: lastMessage
-          };
-        })
-      );
-
+      const conversationsWithProfiles = await Promise.all((data || []).map(async conv => {
+        const otherUserId = conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1;
+        const {
+          data: profileData
+        } = await supabase.from("profiles").select("display_name, username, avatar_url").eq("user_id", otherUserId).single();
+        const lastMessage = conv.messages?.[conv.messages.length - 1];
+        return {
+          ...conv,
+          other_user: profileData || {
+            display_name: "Unknown User",
+            username: "unknown"
+          },
+          last_message: lastMessage
+        };
+      }));
       setConversations(conversationsWithProfiles);
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -150,54 +133,46 @@ export const Messages = () => {
       setLoading(false);
     }
   };
-
   const fetchMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-
+      const {
+        data,
+        error
+      } = await supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", {
+        ascending: true
+      });
       if (error) throw error;
 
       // Fetch sender profiles separately
-      const messagesWithProfiles = await Promise.all(
-        (data || []).map(async (message) => {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("display_name, username, avatar_url")
-            .eq("user_id", message.sender_id)
-            .single();
-
-          return {
-            ...message,
-            sender: profileData || { display_name: "Unknown User", username: "unknown" }
-          };
-        })
-      );
-
+      const messagesWithProfiles = await Promise.all((data || []).map(async message => {
+        const {
+          data: profileData
+        } = await supabase.from("profiles").select("display_name, username, avatar_url").eq("user_id", message.sender_id).single();
+        return {
+          ...message,
+          sender: profileData || {
+            display_name: "Unknown User",
+            username: "unknown"
+          }
+        };
+      }));
       setMessages(messagesWithProfiles);
     } catch (error) {
       console.error("Error fetching messages:", error);
       toast.error("Failed to load messages");
     }
   };
-
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) return;
-
     try {
-      const { error } = await supabase
-        .from("messages")
-        .insert({
-          conversation_id: selectedConversation,
-          sender_id: user.id,
-          content: newMessage.trim()
-        });
-
+      const {
+        error
+      } = await supabase.from("messages").insert({
+        conversation_id: selectedConversation,
+        sender_id: user.id,
+        content: newMessage.trim()
+      });
       if (error) throw error;
-
       setNewMessage("");
       fetchMessages(selectedConversation);
       fetchConversations(); // Refresh to update last message
@@ -206,20 +181,14 @@ export const Messages = () => {
       toast.error("Failed to send message");
     }
   };
-
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth"
+    });
   };
-
-  const filteredConversations = conversations.filter(conv =>
-    conv.other_user?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.other_user?.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredConversations = conversations.filter(conv => conv.other_user?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) || conv.other_user?.username?.toLowerCase().includes(searchTerm.toLowerCase()));
   const selectedConv = conversations.find(c => c.id === selectedConversation);
-
-  return (
-    <div className="min-h-screen bg-background flex">
+  return <div className="min-h-screen bg-background flex">
       <Sidebar user={user} session={session} profile={profile} />
       
       <main className="flex-1 flex">
@@ -236,33 +205,16 @@ export const Messages = () => {
             
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search conversations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-2 border-foreground"
-              />
+              <Input placeholder="Search conversations..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-2 border-foreground" />
             </div>
           </div>
 
           <ScrollArea className="h-[calc(100vh-200px)]">
-            {loading ? (
-              <div className="p-4 space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-muted border-2 border-foreground animate-pulse"></div>
-                ))}
-              </div>
-            ) : filteredConversations.length > 0 ? (
-              <div className="p-4 space-y-2">
-                {filteredConversations.map((conversation) => (
-                  <Card
-                    key={conversation.id}
-                    className={`cursor-pointer border-2 border-foreground transition-colors ${
-                      selectedConversation === conversation.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'
-                    }`}
-                    onClick={() => setSelectedConversation(conversation.id)}
-                  >
-                    <CardContent className="p-3">
+            {loading ? <div className="p-4 space-y-4">
+                {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-muted border-2 border-foreground animate-pulse"></div>)}
+              </div> : filteredConversations.length > 0 ? <div className="p-1 space-y-2">
+                {filteredConversations.map(conversation => <Card key={conversation.id} className={`cursor-pointer border-2 border-foreground transition-colors ${selectedConversation === conversation.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'}`} onClick={() => setSelectedConversation(conversation.id)}>
+                    <CardContent className="p-">
                       <div className="flex items-center gap-3 w-full">
                         <Avatar className="w-10 h-10 border-2 border-foreground flex-shrink-0">
                           <AvatarImage src={conversation.other_user?.avatar_url} />
@@ -276,12 +228,10 @@ export const Messages = () => {
                               {conversation.other_user?.display_name || "Unknown User"}
                             </p>
                             <div className="text-xs opacity-70 flex-shrink-0">
-                              {conversation.last_message_at && (
-                                <div className="flex items-center gap-1">
+                              {conversation.last_message_at && <div className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {new Date(conversation.last_message_at).toLocaleDateString()}
-                                </div>
-                              )}
+                                </div>}
                             </div>
                           </div>
                           <p className="text-xs opacity-70 truncate mt-1">
@@ -290,22 +240,17 @@ export const Messages = () => {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center">
+                  </Card>)}
+              </div> : <div className="p-8 text-center">
                 <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No conversations found</p>
-              </div>
-            )}
+              </div>}
           </ScrollArea>
         </div>
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col">
-          {selectedConversation && selectedConv ? (
-            <>
+          {selectedConversation && selectedConv ? <>
               {/* Chat Header */}
               <div className="p-4 border-b-2 border-foreground bg-card">
                 <div className="flex items-center gap-3">
@@ -329,27 +274,14 @@ export const Messages = () => {
               {/* Messages */}
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.sender_id === user?.id ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg border-2 border-foreground ${
-                          message.sender_id === user?.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card"
-                        }`}
-                      >
+                  {messages.map(message => <div key={message.id} className={`flex ${message.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg border-2 border-foreground ${message.sender_id === user?.id ? "bg-primary text-primary-foreground" : "bg-card"}`}>
                         <p className="text-sm">{message.content}</p>
                         <p className="text-xs opacity-70 mt-1">
                           {new Date(message.created_at).toLocaleTimeString()}
                         </p>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
@@ -357,30 +289,20 @@ export const Messages = () => {
               {/* Message Input */}
               <div className="p-4 border-t-2 border-foreground bg-card">
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                    className="border-2 border-foreground"
-                  />
+                  <Input placeholder="Type a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === "Enter" && sendMessage()} className="border-2 border-foreground" />
                   <Button onClick={sendMessage} className="font-bold uppercase">
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
+            </> : <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <MessageCircle className="w-24 h-24 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-foreground mb-2">Select a conversation</h3>
                 <p className="text-muted-foreground">Choose a conversation from the left to start messaging</p>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
