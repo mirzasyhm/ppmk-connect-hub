@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar, Shield, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface SidebarProps {
   user: User | null;
@@ -158,6 +159,11 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
           </Link>
         </Button>
       </nav>
+
+      {/* Theme Toggle */}
+      <div className="mb-4 flex justify-center">
+        <ThemeToggle />
+      </div>
 
       {/* Sign Out */}
       <Button 
