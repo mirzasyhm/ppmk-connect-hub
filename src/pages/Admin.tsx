@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Upload, Shield, Database } from "lucide-react";
+import { Users, Upload, Shield, Database, Search } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import * as XLSX from 'xlsx';
 
@@ -27,6 +27,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [generatedCredentials, setGeneratedCredentials] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -348,6 +349,24 @@ const Admin = ({ user, session, profile }: AdminProps) => {
     }
   };
 
+  // Filter users based on search query
+  const filteredUsers = users.filter(user => {
+    if (!searchQuery) return true;
+    
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      user.full_name?.toLowerCase().includes(searchLower) ||
+      user.display_name?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.username?.toLowerCase().includes(searchLower) ||
+      user.study_course?.toLowerCase().includes(searchLower) ||
+      user.study_level?.toLowerCase().includes(searchLower) ||
+      user.telephone_malaysia?.toLowerCase().includes(searchLower) ||
+      user.telephone_korea?.toLowerCase().includes(searchLower) ||
+      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
+    );
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -436,6 +455,17 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search users by name, email, course, phone, or role..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -455,7 +485,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                           <TableRow key={user.id}>
                             <TableCell className="font-medium">
                               {user.full_name || user.display_name || 'N/A'}
