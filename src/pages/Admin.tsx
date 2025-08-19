@@ -1263,7 +1263,6 @@ const Admin = ({ user, session, profile }: AdminProps) => {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 };
