@@ -60,31 +60,42 @@ const Admin = ({ user, session, profile }: AdminProps) => {
 
   const fetchAdminData = async () => {
     try {
-      const [usersResult, credentialsResult] = await Promise.all([
-        // Fetch all users with their profiles and roles
-        supabase
-          .from('profiles')
-          .select(`
-            *,
-            user_roles (
-              role,
-              assigned_at
-            )
-          `),
-        
-        // Fetch invited credentials (superadmin only)
-        userRole === 'superadmin' ? 
-          supabase
-            .from('invited_credentials')
-            .select('*')
-            .order('created_at', { ascending: false }) :
-          { data: [], error: null }
-      ]);
+      // Fetch all profiles
+      const profilesResult = await supabase
+        .from('profiles')
+        .select('*');
 
-      if (usersResult.error) {
-        console.error('Error fetching users:', usersResult.error);
-      } else {
-        setUsers(usersResult.data || []);
+      // Fetch all user roles  
+      const rolesResult = await supabase
+        .from('user_roles')
+        .select('*');
+
+      // Fetch invited credentials (superadmin only)
+      const credentialsResult = userRole === 'superadmin' ? 
+        await supabase
+          .from('invited_credentials')
+          .select('*')
+          .order('created_at', { ascending: false }) :
+        { data: [], error: null };
+
+      if (profilesResult.error) {
+        console.error('Error fetching profiles:', profilesResult.error);
+      }
+
+      if (rolesResult.error) {
+        console.error('Error fetching roles:', rolesResult.error);
+      }
+
+      // Combine profiles with their roles
+      if (profilesResult.data && rolesResult.data) {
+        const usersWithRoles = profilesResult.data.map(profile => {
+          const userRole = rolesResult.data.find(role => role.user_id === profile.user_id);
+          return {
+            ...profile,
+            user_roles: userRole ? [userRole] : []
+          };
+        });
+        setUsers(usersWithRoles);
       }
 
       if (credentialsResult.error) {
