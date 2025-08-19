@@ -425,57 +425,73 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Joined</TableHead>
-                        {userRole === 'superadmin' && <TableHead>Actions</TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            {user.display_name || user.full_name || 'N/A'}
-                          </TableCell>
-                          <TableCell>{user.email || 'N/A'}</TableCell>
-                          <TableCell>{user.username || 'N/A'}</TableCell>
-                          <TableCell>
-                            <Badge variant={
-                              user.user_roles?.[0]?.role === 'superadmin' ? 'default' :
-                              user.user_roles?.[0]?.role === 'admin' ? 'secondary' : 'outline'
-                            }>
-                              {user.user_roles?.[0]?.role || 'member'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-                          </TableCell>
-                          {userRole === 'superadmin' && (
-                            <TableCell>
-                              <Select
-                                defaultValue={user.user_roles?.[0]?.role || 'member'}
-                                onValueChange={(value) => updateUserRole(user.user_id, value)}
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="member">Member</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="superadmin">Superadmin</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          )}
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Full Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Gender</TableHead>
+                          <TableHead>Date of Birth</TableHead>
+                          <TableHead>Study Course</TableHead>
+                          <TableHead>Study Level</TableHead>
+                          <TableHead>Phone (MY)</TableHead>
+                          <TableHead>Phone (KR)</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Joined</TableHead>
+                          {userRole === 'superadmin' && <TableHead>Actions</TableHead>}
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {users.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">
+                              {user.full_name || user.display_name || 'N/A'}
+                            </TableCell>
+                            <TableCell>{user.email || 'N/A'}</TableCell>
+                            <TableCell>{user.username || 'N/A'}</TableCell>
+                            <TableCell>{user.gender || 'N/A'}</TableCell>
+                            <TableCell>
+                              {user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : 'N/A'}
+                            </TableCell>
+                            <TableCell>{user.study_course || 'N/A'}</TableCell>
+                            <TableCell>{user.study_level || 'N/A'}</TableCell>
+                            <TableCell>{user.telephone_malaysia || 'N/A'}</TableCell>
+                            <TableCell>{user.telephone_korea || 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                user.user_roles?.[0]?.role === 'superadmin' ? 'default' :
+                                user.user_roles?.[0]?.role === 'admin' ? 'secondary' : 'outline'
+                              }>
+                                {user.user_roles?.[0]?.role || 'member'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                            </TableCell>
+                            {userRole === 'superadmin' && (
+                              <TableCell>
+                                <Select
+                                  defaultValue={user.user_roles?.[0]?.role || 'member'}
+                                  onValueChange={(value) => updateUserRole(user.user_id, value)}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="member">Member</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                    <SelectItem value="superadmin">Superadmin</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
