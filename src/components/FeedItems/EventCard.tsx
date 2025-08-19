@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { toast } from "sonner";
 
 interface EventCardProps {
   event: {
@@ -16,10 +19,120 @@ interface EventCardProps {
     status: string;
     created_at: string;
     image_url?: string;
+    organizer_id: string;
   };
+  onEventUpdate?: () => void;
 }
 
-export const EventCard = ({ event }: EventCardProps) => {
+export const EventCard = ({ event, onEventUpdate }: EventCardProps) => {
+  const [user, setUser] = useState<any>(null);
+  const [isParticipant, setIsParticipant] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        checkParticipation(user.id);
+      }
+    };
+
+    getCurrentUser();
+
+    // Set up auth listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          checkParticipation(session.user.id);
+        } else {
+          setIsParticipant(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [event.id]);
+
+  const checkParticipation = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("event_participants")
+        .select("id")
+        .eq("event_id", event.id)
+        .eq("user_id", userId)
+        .eq("status", "registered")
+        .single();
+
+      setIsParticipant(!!data);
+    } catch (error) {
+      setIsParticipant(false);
+    }
+  };
+
+  const joinEvent = async () => {
+    if (!user) {
+      toast.error("Please log in to join events");
+      return;
+    }
+
+    if (event.max_participants && event.current_participants >= event.max_participants) {
+      toast.error("Event is full");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("event_participants")
+        .insert({
+          event_id: event.id,
+          user_id: user.id,
+          status: "registered"
+        });
+
+      if (error) throw error;
+
+      setIsParticipant(true);
+      toast.success("Successfully joined the event!");
+      onEventUpdate?.();
+    } catch (error: any) {
+      console.error("Error joining event:", error);
+      if (error.code === "23505") {
+        toast.error("You're already registered for this event");
+      } else {
+        toast.error("Failed to join event");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const leaveEvent = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("event_participants")
+        .delete()
+        .eq("event_id", event.id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setIsParticipant(false);
+      toast.success("Left the event successfully");
+      onEventUpdate?.();
+    } catch (error) {
+      console.error("Error leaving event:", error);
+      toast.error("Failed to leave event");
+    } finally {
+      setLoading(false);
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'bg-primary text-primary-foreground';
@@ -100,8 +213,33 @@ export const EventCard = ({ event }: EventCardProps) => {
             Posted {new Date(event.created_at).toLocaleDateString()}
           </div>
           
-          {event.status === 'upcoming' && (
-            <Button variant="brutal" className="font-bold uppercase">
+          {event.status === 'upcoming' && user && (
+            isParticipant ? (
+              <Button 
+                variant="outline" 
+                onClick={leaveEvent}
+                disabled={loading}
+                className="font-bold uppercase border-2 border-foreground"
+              >
+                {loading ? "Leaving..." : "Leave Event"}
+              </Button>
+            ) : (
+              <Button 
+                onClick={joinEvent}
+                disabled={loading || (event.max_participants && event.current_participants >= event.max_participants)}
+                className="font-bold uppercase"
+              >
+                {loading ? "Joining..." : 
+                 (event.max_participants && event.current_participants >= event.max_participants) ? "Event Full" : "Join Event"}
+              </Button>
+            )
+          )}
+          
+          {event.status === 'upcoming' && !user && (
+            <Button 
+              onClick={() => toast.error("Please log in to join events")}
+              className="font-bold uppercase"
+            >
               Join Event
             </Button>
           )}

@@ -423,7 +423,7 @@ export const Events = () => {
               <h2 className="text-2xl font-bold text-foreground uppercase">Upcoming Events</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={event.id} event={event} onEventUpdate={fetchEvents} />
                 ))}
               </div>
             </div>
@@ -435,7 +435,7 @@ export const Events = () => {
               <h2 className="text-2xl font-bold text-foreground uppercase">Past Events</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {pastEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={event.id} event={event} onEventUpdate={fetchEvents} />
                 ))}
               </div>
             </div>
