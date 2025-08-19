@@ -101,8 +101,8 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
-        <Button asChild variant="ghost" className={getNavClassName('/')}>
-          <Link to="/">
+        <Button asChild variant="ghost" className={getNavClassName('/feed')}>
+          <Link to="/feed">
             <Rss className="w-5 h-5" />
             Feed
           </Link>

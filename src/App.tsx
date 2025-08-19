@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import Index from "./pages/Index";
+import { Feed } from "./pages/Feed";
 import Broadcast from "./pages/Broadcast";
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
@@ -101,6 +102,11 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/feed" element={
+              <AuthenticatedLayout>
+                <Feed user={user!} session={session!} profile={profile} />
+              </AuthenticatedLayout>
+            } />
             <Route path="/broadcast" element={
               <AuthenticatedLayout>
                 <Broadcast />
