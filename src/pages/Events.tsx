@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventCard } from "@/components/FeedItems/EventCard";
@@ -36,6 +38,17 @@ export const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [createEventOpen, setCreateEventOpen] = useState(false);
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    location: "",
+    category: "",
+    event_date: "",
+    end_date: "",
+    max_participants: "",
+    image_url: ""
+  });
 
   useEffect(() => {
     // Set up auth state listener
@@ -89,6 +102,48 @@ export const Events = () => {
     }
   };
 
+  const createEvent = async () => {
+    if (!user || !eventForm.title || !eventForm.description || !eventForm.location || !eventForm.category || !eventForm.event_date) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("events").insert({
+        title: eventForm.title,
+        description: eventForm.description,
+        location: eventForm.location,
+        category: eventForm.category,
+        event_date: eventForm.event_date,
+        end_date: eventForm.end_date || null,
+        max_participants: eventForm.max_participants ? parseInt(eventForm.max_participants) : null,
+        image_url: eventForm.image_url || null,
+        organizer_id: user.id,
+        status: "upcoming",
+        current_participants: 0
+      });
+
+      if (error) throw error;
+
+      toast.success("Event created successfully!");
+      setCreateEventOpen(false);
+      setEventForm({
+        title: "",
+        description: "",
+        location: "",
+        category: "",
+        event_date: "",
+        end_date: "",
+        max_participants: "",
+        image_url: ""
+      });
+      fetchEvents();
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast.error("Failed to create event");
+    }
+  };
+
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -122,10 +177,133 @@ export const Events = () => {
               <h1 className="text-4xl font-bold text-foreground uppercase">Events</h1>
               <p className="text-muted-foreground mt-2">Join study groups, sports, and social events</p>
             </div>
-            <Button className="font-bold uppercase">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Event
-            </Button>
+            <Dialog open={createEventOpen} onOpenChange={setCreateEventOpen}>
+              <DialogTrigger asChild>
+                <Button className="font-bold uppercase">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Event
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground font-bold uppercase">
+                    Create New Event
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground uppercase">Title *</label>
+                      <Input
+                        placeholder="Enter event title"
+                        value={eventForm.title}
+                        onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                        className="border-2 border-foreground"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground uppercase">Category *</label>
+                      <Select value={eventForm.category} onValueChange={(value) => setEventForm({ ...eventForm, category: value })}>
+                        <SelectTrigger className="border-2 border-foreground">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="study">Study Group</SelectItem>
+                          <SelectItem value="sports">Sports</SelectItem>
+                          <SelectItem value="social">Social</SelectItem>
+                          <SelectItem value="cultural">Cultural</SelectItem>
+                          <SelectItem value="workshop">Workshop</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground uppercase">Description *</label>
+                    <Textarea
+                      placeholder="Describe your event..."
+                      value={eventForm.description}
+                      onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                      className="border-2 border-foreground min-h-24"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground uppercase">Location *</label>
+                    <Input
+                      placeholder="Event location"
+                      value={eventForm.location}
+                      onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                      className="border-2 border-foreground"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground uppercase">Start Date & Time *</label>
+                      <Input
+                        type="datetime-local"
+                        value={eventForm.event_date}
+                        onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })}
+                        className="border-2 border-foreground"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground uppercase">End Date & Time</label>
+                      <Input
+                        type="datetime-local"
+                        value={eventForm.end_date}
+                        onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })}
+                        className="border-2 border-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground uppercase">Max Participants</label>
+                      <Input
+                        type="number"
+                        placeholder="Optional limit"
+                        value={eventForm.max_participants}
+                        onChange={(e) => setEventForm({ ...eventForm, max_participants: e.target.value })}
+                        className="border-2 border-foreground"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground uppercase">Image URL</label>
+                      <Input
+                        placeholder="Optional image URL"
+                        value={eventForm.image_url}
+                        onChange={(e) => setEventForm({ ...eventForm, image_url: e.target.value })}
+                        className="border-2 border-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setCreateEventOpen(false)}
+                      className="border-2 border-foreground font-bold uppercase"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={createEvent}
+                      className="font-bold uppercase"
+                    >
+                      Create Event
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Filters */}
