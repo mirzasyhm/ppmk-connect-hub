@@ -214,27 +214,26 @@ export const Messages = () => {
                 {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-muted border-2 border-foreground animate-pulse"></div>)}
               </div> : filteredConversations.length > 0 ? <div className="p-1 space-y-2">
                 {filteredConversations.map(conversation => <Card key={conversation.id} className={`cursor-pointer border-2 border-foreground transition-colors ${selectedConversation === conversation.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'}`} onClick={() => setSelectedConversation(conversation.id)}>
-                    <CardContent className="p-">
-                      <div className="flex items-center gap-3 w-full">
-                        <Avatar className="w-10 h-10 border-2 border-foreground flex-shrink-0">
+                    <CardContent className="p-2">
+                      <div className="flex items-center gap-2 w-full">
+                        <Avatar className="w-6 h-6 border border-foreground flex-shrink-0">
                           <AvatarImage src={conversation.other_user?.avatar_url} />
-                          <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                          <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                             {conversation.other_user?.display_name?.charAt(0) || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0 overflow-hidden">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="font-semibold truncate text-sm">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="font-medium truncate text-xs">
                               {conversation.other_user?.display_name || "Unknown User"}
                             </p>
-                            <div className="text-xs opacity-70 flex-shrink-0">
-                              {conversation.last_message_at && <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {new Date(conversation.last_message_at).toLocaleDateString()}
-                                </div>}
+                            <div className="text-[10px] opacity-60 flex-shrink-0">
+                              {conversation.last_message_at && 
+                                new Date(conversation.last_message_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              }
                             </div>
                           </div>
-                          <p className="text-xs opacity-70 truncate mt-1">
+                          <p className="text-[10px] opacity-60 truncate">
                             {conversation.last_message?.content || "No messages yet"}
                           </p>
                         </div>
