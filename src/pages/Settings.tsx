@@ -265,7 +265,7 @@ export const Settings = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="messages-general">Message notifications</Label>
-                <Switch id="messages-general" checked={notificationSettings.messages_general} onCheckedChange={checked => updateNotificationSetting('messages_general', checked)} className="text-gray-500 bg-gray-500 hover:bg-gray-400" />
+                <Switch id="messages-general" checked={notificationSettings.messages_general} onCheckedChange={checked => updateNotificationSetting('messages_general', checked)} className="bg-muted hover:bg-muted/80" />
               </div>
             </div>
           </div>
