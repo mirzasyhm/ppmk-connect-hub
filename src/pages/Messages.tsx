@@ -268,9 +268,8 @@ export const Messages = () => {
   const selectedConv = conversations.find(c => c.id === selectedConversation);
   return (
     <div className="flex h-full">
-      <div className="w-1/3 border-r border-border">
-        {/* Conversations List */}
-        <div className="w-80 border-r-2 border-foreground bg-card">
+      {/* Conversations List */}
+      <div className="w-80 border-r-2 border-foreground bg-card flex flex-col">
           <div className="p-4 border-b-2 border-foreground">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground uppercase">Messages</h2>
@@ -393,63 +392,74 @@ export const Messages = () => {
                 <p className="text-muted-foreground">No conversations found</p>
               </div>}
           </ScrollArea>
-        </div>
+      </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {selectedConversation && selectedConv ? <>
-              {/* Chat Header */}
-              <div className="p-4 border-b-2 border-foreground bg-card">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10 border-2 border-foreground">
-                    <AvatarImage src={selectedConv.other_user?.avatar_url} />
-                    <AvatarFallback className="bg-primary text-primary-foreground font-bold">
-                      {selectedConv.other_user?.display_name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-bold text-foreground">
-                      {selectedConv.other_user?.display_name || "Unknown User"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      @{selectedConv.other_user?.username || "unknown"}
-                    </p>
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {selectedConversation && selectedConv ? (
+          <>
+            {/* Chat Header */}
+            <div className="p-4 border-b-2 border-foreground bg-card">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10 border-2 border-foreground">
+                  <AvatarImage src={selectedConv.other_user?.avatar_url} />
+                  <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                    {selectedConv.other_user?.display_name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-bold text-foreground">
+                    {selectedConv.other_user?.display_name || "Unknown User"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    @{selectedConv.other_user?.username || "unknown"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map(message => (
+                  <div key={message.id} className={`flex ${message.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg border-2 border-foreground ${message.sender_id === user?.id ? "bg-primary text-primary-foreground" : "bg-card"}`}>
+                      <p className="text-sm">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(message.created_at).toLocaleTimeString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
+            </ScrollArea>
 
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map(message => <div key={message.id} className={`flex ${message.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg border-2 border-foreground ${message.sender_id === user?.id ? "bg-primary text-primary-foreground" : "bg-card"}`}>
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {new Date(message.created_at).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>)}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-
-              {/* Message Input */}
-              <div className="p-4 border-t-2 border-foreground bg-card">
-                <div className="flex gap-2">
-                  <Input placeholder="Type a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === "Enter" && sendMessage()} className="border-2 border-foreground" />
-                  <Button onClick={sendMessage} className="font-bold uppercase">
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
+            {/* Message Input */}
+            <div className="p-4 border-t-2 border-foreground bg-card">
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Type a message..." 
+                  value={newMessage} 
+                  onChange={e => setNewMessage(e.target.value)} 
+                  onKeyPress={e => e.key === "Enter" && sendMessage()} 
+                  className="border-2 border-foreground" 
+                />
+                <Button onClick={sendMessage} className="font-bold uppercase">
+                  <Send className="w-4 h-4" />
+                </Button>
               </div>
-            </> : <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <MessageCircle className="w-24 h-24 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">Select a conversation</h3>
-                <p className="text-muted-foreground">Choose a conversation from the left to start messaging</p>
-              </div>
-            </div>}
-        </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <MessageCircle className="w-24 h-24 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-foreground mb-2">Select a conversation</h3>
+              <p className="text-muted-foreground">Choose a conversation from the left to start messaging</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
