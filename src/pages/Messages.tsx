@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MessageCircle, Send, Plus, Search, Clock } from "lucide-react";
 import { toast } from "sonner";
 interface Conversation {
@@ -37,6 +38,13 @@ interface Message {
     avatar_url?: string;
   };
 }
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+  username: string;
+  avatar_url?: string;
+}
 export const Messages = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -47,6 +55,10 @@ export const Messages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [newConversationOpen, setNewConversationOpen] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Set up auth state listener
@@ -186,6 +198,73 @@ export const Messages = () => {
       behavior: "smooth"
     });
   };
+
+  const searchUsers = async (searchQuery: string) => {
+    if (!searchQuery.trim() || !user) return;
+    
+    setSearchingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, username, avatar_url")
+        .neq("user_id", user.id) // Exclude current user
+        .or(`display_name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      toast.error("Failed to search users");
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  const startConversation = async (otherUser: UserProfile) => {
+    if (!user) return;
+
+    try {
+      // Check if conversation already exists
+      const { data: existingConv } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${otherUser.user_id}),and(participant_1.eq.${otherUser.user_id},participant_2.eq.${user.id})`)
+        .single();
+
+      if (existingConv) {
+        // Conversation exists, select it
+        setSelectedConversation(existingConv.id);
+        setNewConversationOpen(false);
+        setUserSearchTerm("");
+        setSearchResults([]);
+        return;
+      }
+
+      // Create new conversation
+      const { data: newConv, error } = await supabase
+        .from("conversations")
+        .insert({
+          participant_1: user.id,
+          participant_2: otherUser.user_id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Refresh conversations and select the new one
+      await fetchConversations();
+      setSelectedConversation(newConv.id);
+      setNewConversationOpen(false);
+      setUserSearchTerm("");
+      setSearchResults([]);
+      toast.success(`Started conversation with ${otherUser.display_name}`);
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+      toast.error("Failed to start conversation");
+    }
+  };
   const filteredConversations = conversations.filter(conv => conv.other_user?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) || conv.other_user?.username?.toLowerCase().includes(searchTerm.toLowerCase()));
   const selectedConv = conversations.find(c => c.id === selectedConversation);
   return <div className="min-h-screen bg-background flex">
@@ -197,10 +276,81 @@ export const Messages = () => {
           <div className="p-4 border-b-2 border-foreground">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground uppercase">Messages</h2>
-              <Button size="sm" className="font-bold uppercase">
-                <Plus className="w-4 h-4 mr-2" />
-                New
-              </Button>
+              <Dialog open={newConversationOpen} onOpenChange={setNewConversationOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="font-bold uppercase">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-foreground font-bold uppercase">
+                      Start New Conversation
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search users by name or username..."
+                        value={userSearchTerm}
+                        onChange={(e) => {
+                          setUserSearchTerm(e.target.value);
+                          searchUsers(e.target.value);
+                        }}
+                        className="pl-10 border-2 border-foreground"
+                      />
+                    </div>
+
+                    <ScrollArea className="max-h-60">
+                      {searchingUsers ? (
+                        <div className="p-4 text-center text-muted-foreground">
+                          Searching users...
+                        </div>
+                      ) : searchResults.length > 0 ? (
+                        <div className="space-y-2">
+                          {searchResults.map((userProfile) => (
+                            <Card
+                              key={userProfile.user_id}
+                              className="cursor-pointer border-2 border-foreground hover:bg-muted/50 transition-colors"
+                              onClick={() => startConversation(userProfile)}
+                            >
+                              <CardContent className="p-3">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8 border border-foreground">
+                                    <AvatarImage src={userProfile.avatar_url} />
+                                    <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+                                      {userProfile.display_name?.charAt(0) || "U"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">
+                                      {userProfile.display_name || "Unknown User"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      @{userProfile.username || "unknown"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : userSearchTerm.trim() ? (
+                        <div className="p-4 text-center text-muted-foreground">
+                          No users found
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-muted-foreground">
+                          Start typing to search for users
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <div className="relative">
