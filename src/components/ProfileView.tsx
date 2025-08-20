@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { User, MapPin, GraduationCap, Calendar, Settings, Eye, EyeOff } from "lucide-react";
-import ProfileInfo from "./ProfileInfo";
+import { Link } from "react-router-dom";
 import ProfileActivities from "./ProfileActivities";
 import ProfilePrivacySettings from "./ProfilePrivacySettings";
 
@@ -17,7 +17,6 @@ interface ProfileViewProps {
 export default function ProfileView({ userId }: ProfileViewProps) {
   const [profile, setProfile] = useState<any>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
-  const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const [privacySettings, setPrivacySettings] = useState({
     showAge: true,
@@ -102,15 +101,16 @@ export default function ProfileView({ userId }: ProfileViewProps) {
             {showPrivacySettings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             Privacy
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowProfileInfo(!showProfileInfo)}
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Profile Info
-          </Button>
+          <Link to="/profile/info">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Profile Info
+            </Button>
+          </Link>
         </div>
       )}
 
@@ -123,10 +123,6 @@ export default function ProfileView({ userId }: ProfileViewProps) {
         />
       )}
 
-      {/* Profile Info (Detailed) */}
-      {isOwnProfile && showProfileInfo && (
-        <ProfileInfo profile={profile} onClose={() => setShowProfileInfo(false)} />
-      )}
 
       {/* Main Profile View */}
       <Card>

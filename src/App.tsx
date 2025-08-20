@@ -17,6 +17,7 @@ import { Marketplace } from "./pages/Marketplace";
 import { Events } from "./pages/Events";
 import { Messages } from "./pages/Messages";
 import Profile from "./pages/Profile";
+import ProfileInfoPage from "./pages/ProfileInfo";
 import Admin from "./pages/Admin";
 import Notifications from "./pages/Notifications";
 import { Settings } from "./pages/Settings";
@@ -143,6 +144,11 @@ const App = () => {
             <Route path="/profile" element={
               <AuthenticatedLayout>
                 <Profile />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/profile/info" element={
+              <AuthenticatedLayout>
+                <ProfileInfoPage />
               </AuthenticatedLayout>
             } />
             <Route path="/admin" element={
