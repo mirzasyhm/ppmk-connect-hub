@@ -18,6 +18,7 @@ import { Events } from "./pages/Events";
 import { Messages } from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import Notifications from "./pages/Notifications";
 import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -147,6 +148,11 @@ const App = () => {
             <Route path="/admin" element={
               <AuthenticatedLayout>
                 <Admin user={user} session={session} profile={profile} />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/notifications" element={
+              <AuthenticatedLayout>
+                <Notifications />
               </AuthenticatedLayout>
             } />
             <Route path="/settings" element={

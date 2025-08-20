@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar, Shield, Settings } from "lucide-react";
+import { Rss, Megaphone, Users, ShoppingCart, MessageCircle, User as UserIcon, LogOut, Calendar, Shield, Settings, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -152,6 +152,12 @@ export const Sidebar = ({ user, session, profile }: SidebarProps) => {
             </Link>
           </Button>
         )}
+        <Button asChild variant="ghost" className={getNavClassName('/notifications')}>
+          <Link to="/notifications">
+            <Bell className="w-5 h-5" />
+            Notifications
+          </Link>
+        </Button>
         <Button asChild variant="ghost" className={getNavClassName('/settings')}>
           <Link to="/settings">
             <Settings className="w-5 h-5" />
