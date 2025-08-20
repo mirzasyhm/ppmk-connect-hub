@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, MessageCircle, Heart, Users, Calendar, Megaphone, ShoppingCart } from "lucide-react";
+import { Bell, MessageCircle, Heart, Users, Calendar, Megaphone, ShoppingCart, X, Check, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface Notification {
   id: string;
@@ -109,6 +110,30 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id 
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, read: true }))
+    );
+  };
+
+  const deleteAll = () => {
+    setNotifications([]);
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -126,13 +151,40 @@ export default function Notifications() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Bell className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
-        {unreadCount > 0 && (
-          <Badge variant="destructive" className="ml-2">
-            {unreadCount} new
-          </Badge>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Bell className="w-8 h-8 text-primary" />
+          <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="ml-2">
+              {unreadCount} new
+            </Badge>
+          )}
+        </div>
+        
+        {notifications.length > 0 && (
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button 
+                onClick={markAllAsRead}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Mark All Read
+              </Button>
+            )}
+            <Button 
+              onClick={deleteAll}
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete All
+            </Button>
+          </div>
         )}
       </div>
 
@@ -153,7 +205,7 @@ export default function Notifications() {
             return (
               <Card 
                 key={notification.id} 
-                className={`border-2 border-foreground shadow-brutal transition-all hover:shadow-brutal-hover cursor-pointer ${
+                className={`border-2 border-foreground shadow-brutal transition-all hover:shadow-brutal-hover ${
                   !notification.read ? 'bg-muted/30' : ''
                 }`}
               >
@@ -162,14 +214,30 @@ export default function Notifications() {
                     <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
                       <IconComponent className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex-1">
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => !notification.read && markAsRead(notification.id)}
+                    >
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-semibold text-foreground">
                           {notification.title}
                         </h3>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeNotification(notification.id);
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                       <p className="text-muted-foreground mb-2">
                         {notification.message}
