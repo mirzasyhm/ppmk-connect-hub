@@ -218,9 +218,9 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
 
           <Separator />
 
-          {/* Personal Details */}
+          {/* Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Personal Details</h3>
+            <h3 className="text-lg font-medium">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="gender">Gender</Label>
@@ -242,12 +242,163 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
                 )}
               </div>
               <div>
+                <Label htmlFor="marital_status">Marital Status</Label>
+                {isEditing ? (
+                  <Select onValueChange={(value) => setValue("marital_status", value)} value={watch("marital_status")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select marital status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="married">Married</SelectItem>
+                      <SelectItem value="divorced">Divorced</SelectItem>
+                      <SelectItem value="widowed">Widowed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="p-3 bg-muted rounded-md capitalize">
+                    {formatDisplayValue(profile?.marital_status)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="race">Race</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Select 
+                      onValueChange={(value) => {
+                        setValue("race", value === 'other' ? customRace : value);
+                        if (value !== 'other') setCustomRace("");
+                      }} 
+                      value={watch("race") === customRace ? 'other' : watch("race")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select race" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="malay">Malay</SelectItem>
+                        <SelectItem value="chinese">Chinese</SelectItem>
+                        <SelectItem value="indian">Indian</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {watch("race") === 'other' && (
+                      <Input
+                        placeholder="Please specify"
+                        value={customRace}
+                        onChange={(e) => {
+                          setCustomRace(e.target.value);
+                          setValue("race", e.target.value);
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-muted rounded-md capitalize">
+                    {formatDisplayValue(profile?.race)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="religion">Religion</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Select 
+                      onValueChange={(value) => {
+                        setValue("religion", value === 'other' ? customReligion : value);
+                        if (value !== 'other') setCustomReligion("");
+                      }} 
+                      value={watch("religion") === customReligion ? 'other' : watch("religion")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select religion" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="islam">Islam</SelectItem>
+                        <SelectItem value="christianity">Christianity</SelectItem>
+                        <SelectItem value="buddhism">Buddhism</SelectItem>
+                        <SelectItem value="hinduism">Hinduism</SelectItem>
+                        <SelectItem value="taoism">Taoism</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {watch("religion") === 'other' && (
+                      <Input
+                        placeholder="Please specify"
+                        value={customReligion}
+                        onChange={(e) => {
+                          setCustomReligion(e.target.value);
+                          setValue("religion", e.target.value);
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-muted rounded-md capitalize">
+                    {formatDisplayValue(profile?.religion)}
+                  </div>
+                )}
+              </div>
+              <div>
                 <Label htmlFor="date_of_birth">Date of Birth</Label>
                 {isEditing ? (
                   <Input {...register("date_of_birth")} type="date" />
                 ) : (
                   <div className="p-3 bg-muted rounded-md">
                     {formatDate(profile?.date_of_birth)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="born_place">Place of Birth</Label>
+                {isEditing ? (
+                  <Input {...register("born_place")} placeholder="Place of birth" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.born_place)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Identification Documents */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Identification Documents
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="passport_number">Passport Number</Label>
+                {isEditing ? (
+                  <Input {...register("passport_number")} placeholder="Passport number" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.passport_number)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="arc_number">ARC Number</Label>
+                {isEditing ? (
+                  <Input {...register("arc_number")} placeholder="ARC number" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.arc_number)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="identity_card_number">Identity Card Number</Label>
+                {isEditing ? (
+                  <Input {...register("identity_card_number")} placeholder="IC number" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.identity_card_number)}
                   </div>
                 )}
               </div>
@@ -264,12 +415,12 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="telephone_malaysia">Malaysia Phone</Label>
                 {isEditing ? (
-                  <Input {...register("email")} type="email" />
+                  <Input {...register("telephone_malaysia")} placeholder="+60" />
                 ) : (
                   <div className="p-3 bg-muted rounded-md">
-                    {formatDisplayValue(profile?.email)}
+                    {formatDisplayValue(profile?.telephone_malaysia)}
                   </div>
                 )}
               </div>
@@ -283,12 +434,42 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
                   </div>
                 )}
               </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                {isEditing ? (
+                  <Input {...register("email")} type="email" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.email)}
+                  </div>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="address_malaysia">Malaysia Address</Label>
+                {isEditing ? (
+                  <Textarea {...register("address_malaysia")} placeholder="Malaysia address" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md min-h-[80px]">
+                    {formatDisplayValue(profile?.address_malaysia)}
+                  </div>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="address_korea">Korea Address</Label>
+                {isEditing ? (
+                  <Textarea {...register("address_korea")} placeholder="Korea address" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md min-h-[80px]">
+                    {formatDisplayValue(profile?.address_korea)}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <Separator />
 
-          {/* Education */}
+          {/* Education Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <GraduationCap className="h-5 w-5" />
@@ -296,7 +477,7 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="studying_place">University</Label>
+                <Label htmlFor="studying_place">University/Institution</Label>
                 {isEditing ? (
                   <Input {...register("studying_place")} placeholder="University name" />
                 ) : (
@@ -306,7 +487,7 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
                 )}
               </div>
               <div>
-                <Label htmlFor="study_course">Course</Label>
+                <Label htmlFor="study_course">Course of Study</Label>
                 {isEditing ? (
                   <Input {...register("study_course")} placeholder="Course name" />
                 ) : (
@@ -337,12 +518,179 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
                 )}
               </div>
               <div>
-                <Label htmlFor="study_start_date">Start Date</Label>
+                <Label htmlFor="study_start_date">Study Start Date</Label>
                 {isEditing ? (
                   <Input {...register("study_start_date")} type="date" />
                 ) : (
                   <div className="p-3 bg-muted rounded-md">
                     {formatDate(profile?.study_start_date)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="study_end_date">Study End Date</Label>
+                {isEditing ? (
+                  <Input {...register("study_end_date")} type="date" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDate(profile?.study_end_date)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Sponsorship Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Sponsorship Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sponsorship">Sponsorship</Label>
+                {isEditing ? (
+                  <Input {...register("sponsorship")} placeholder="Sponsorship organization" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.sponsorship)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="sponsorship_phone_number">Sponsorship Phone</Label>
+                {isEditing ? (
+                  <Input {...register("sponsorship_phone_number")} placeholder="Sponsorship contact number" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.sponsorship_phone_number)}
+                  </div>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="sponsorship_address">Sponsorship Address</Label>
+                {isEditing ? (
+                  <Textarea {...register("sponsorship_address")} placeholder="Sponsorship address" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md min-h-[80px]">
+                    {formatDisplayValue(profile?.sponsorship_address)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Medical & Emergency Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Medical & Emergency Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="blood_type">Blood Type</Label>
+                {isEditing ? (
+                  <Select onValueChange={(value) => setValue("blood_type", value)} value={watch("blood_type")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select blood type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.blood_type)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="allergy">Allergies</Label>
+                {isEditing ? (
+                  <Input {...register("allergy")} placeholder="Known allergies" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.allergy)}
+                  </div>
+                )}
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="medical_condition">Medical Conditions</Label>
+                {isEditing ? (
+                  <Textarea {...register("medical_condition")} placeholder="Medical conditions" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md min-h-[80px]">
+                    {formatDisplayValue(profile?.medical_condition)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="next_of_kin">Next of Kin</Label>
+                {isEditing ? (
+                  <Input {...register("next_of_kin")} placeholder="Next of kin name" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.next_of_kin)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="next_of_kin_relationship">Relationship</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Select 
+                      onValueChange={(value) => {
+                        setValue("next_of_kin_relationship", value === 'other' ? customRelationship : value);
+                        if (value !== 'other') setCustomRelationship("");
+                      }} 
+                      value={watch("next_of_kin_relationship") === customRelationship ? 'other' : watch("next_of_kin_relationship")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="parent">Parent</SelectItem>
+                        <SelectItem value="spouse">Spouse</SelectItem>
+                        <SelectItem value="sibling">Sibling</SelectItem>
+                        <SelectItem value="child">Child</SelectItem>
+                        <SelectItem value="guardian">Guardian</SelectItem>
+                        <SelectItem value="friend">Friend</SelectItem>
+                        <SelectItem value="relative">Relative</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {watch("next_of_kin_relationship") === 'other' && (
+                      <Input
+                        placeholder="Please specify"
+                        value={customRelationship}
+                        onChange={(e) => {
+                          setCustomRelationship(e.target.value);
+                          setValue("next_of_kin_relationship", e.target.value);
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-muted rounded-md capitalize">
+                    {formatDisplayValue(profile?.next_of_kin_relationship)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="next_of_kin_contact_number">Contact Number</Label>
+                {isEditing ? (
+                  <Input {...register("next_of_kin_contact_number")} placeholder="Emergency contact number" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.next_of_kin_contact_number)}
                   </div>
                 )}
               </div>
