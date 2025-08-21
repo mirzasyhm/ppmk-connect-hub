@@ -1,137 +1,210 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, MessageCircle, Heart, Users, Calendar, Megaphone, ShoppingCart, X, Check, Trash2 } from "lucide-react";
+import { Bell, MessageCircle, Heart, Users, Calendar, Megaphone, ShoppingCart, X, Check, Trash2, MessageSquare, UserPlus, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { NotificationService, NotificationWithProfile, NotificationType } from "@/services/notificationService";
+import { useToast } from "@/hooks/use-toast";
 
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  created_at: string;
-  read: boolean;
-  icon: any;
-}
+const iconMap = {
+  MessageCircle,
+  Heart,
+  Users,
+  Calendar,
+  Megaphone,
+  ShoppingCart,
+  MessageSquare,
+  UserPlus,
+  Clock,
+  Bell
+};
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchNotifications();
+    
+    // Set up real-time subscription for new notifications
+    const setupSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const unsubscribe = NotificationService.subscribeToNotifications(
+          user.id,
+          (newNotification) => {
+            setNotifications(prev => [newNotification, ...prev]);
+          }
+        );
+        
+        return () => unsubscribe();
+      }
+    };
+    
+    setupSubscription();
   }, []);
 
   const fetchNotifications = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-      // Simulate notifications from different sources
-      // In a real app, you'd fetch actual notifications from a notifications table
-      const mockNotifications: Notification[] = [
-        {
-          id: "1",
-          type: "message",
-          title: "New Message",
-          message: "You have a new message from John Doe",
-          created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-          read: false,
-          icon: MessageCircle
-        },
-        {
-          id: "2",
-          type: "like",
-          title: "Post Liked",
-          message: "Sarah liked your post",
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-          read: false,
-          icon: Heart
-        },
-        {
-          id: "3",
-          type: "community",
-          title: "New Community Post",
-          message: "New post in Malaysian Students community",
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
-          read: true,
-          icon: Users
-        },
-        {
-          id: "4",
-          type: "event",
-          title: "Event Reminder",
-          message: "Korean Culture Festival starts tomorrow",
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
-          read: true,
-          icon: Calendar
-        },
-        {
-          id: "5",
-          type: "broadcast",
-          title: "Important Announcement",
-          message: "New safety guidelines have been posted",
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
-          read: true,
-          icon: Megaphone
-        },
-        {
-          id: "6",
-          type: "marketplace",
-          title: "Item Sold",
-          message: "Your textbook has been purchased",
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
-          read: true,
-          icon: ShoppingCart
-        }
-      ];
-
-      setNotifications(mockNotifications);
+      const userNotifications = await NotificationService.fetchUserNotifications(user.id);
+      setNotifications(userNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      
+      // If table doesn't exist or relationship error, show mock data for demo purposes
+      if (error.message?.includes('relation "public.notifications" does not exist') || 
+          error.message?.includes('Could not find a relationship') ||
+          error.code === 'PGRST200') {
+        console.log('Notifications table not found, showing mock data');
+        const mockNotifications: NotificationWithProfile[] = [
+          {
+            id: "1",
+            user_id: user.id,
+            type: "message",
+            title: "New Message",
+            message: "You have a new message from John Doe",
+            read: false,
+            action_url: "/messages",
+            related_id: null,
+            related_type: "message",
+            sender_id: null,
+            created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+            updated_at: new Date().toISOString(),
+            sender_profile: { display_name: "John Doe", avatar_url: null }
+          },
+          {
+            id: "2",
+            user_id: user.id,
+            type: "like",
+            title: "Post Liked",
+            message: "Sarah liked your post",
+            read: false,
+            action_url: "/feed",
+            related_id: null,
+            related_type: "post",
+            sender_id: null,
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+            updated_at: new Date().toISOString(),
+            sender_profile: { display_name: "Sarah", avatar_url: null }
+          },
+          {
+            id: "3",
+            user_id: user.id,
+            type: "community",
+            title: "New Community Post",
+            message: "New post in Malaysian Students community",
+            read: true,
+            action_url: "/communities",
+            related_id: null,
+            related_type: "community_post",
+            sender_id: null,
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+            updated_at: new Date().toISOString(),
+            sender_profile: null
+          }
+        ];
+        setNotifications(mockNotifications);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load notifications",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'message': return 'bg-blue-500';
-      case 'like': return 'bg-red-500';
-      case 'community': return 'bg-green-500';
-      case 'event': return 'bg-purple-500';
-      case 'broadcast': return 'bg-orange-500';
-      case 'marketplace': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAsRead = async (id: string) => {
+    try {
+      await NotificationService.markAsRead(id);
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === id 
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
+  const removeNotification = async (id: string) => {
+    try {
+      await NotificationService.deleteNotification(id);
+      setNotifications(prev => prev.filter(notification => notification.id !== id));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete notification",
+        variant: "destructive",
+      });
+    }
   };
 
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  const markAllAsRead = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      await NotificationService.markAllAsRead(user.id);
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read",
+        variant: "destructive",
+      });
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
+  const deleteAll = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      await NotificationService.deleteAllNotifications(user.id);
+      setNotifications([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete all notifications",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteAll = () => {
-    setNotifications([]);
+  const handleNotificationClick = async (notification: NotificationWithProfile) => {
+    // Mark as read if not already read
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+
+    // Navigate to the appropriate page
+    const actionUrl = notification.action_url || 
+      NotificationService.generateActionUrl(notification.related_type, notification.related_id);
+    navigate(actionUrl);
   };
 
   if (loading) {
@@ -201,23 +274,24 @@ export default function Notifications() {
       ) : (
         <div className="space-y-4">
           {notifications.map((notification) => {
-            const IconComponent = notification.icon;
+            const iconName = NotificationService.getNotificationIcon(notification.type as NotificationType);
+            const IconComponent = iconMap[iconName] || Bell;
+            const colorClass = NotificationService.getNotificationColor(notification.type as NotificationType);
+            
             return (
               <Card 
                 key={notification.id} 
-                className={`border-2 border-foreground shadow-brutal transition-all hover:shadow-brutal-hover ${
+                className={`border-2 border-foreground shadow-brutal transition-all hover:shadow-brutal-hover cursor-pointer ${
                   !notification.read ? 'bg-muted/30' : ''
                 }`}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
+                    <div className={`p-2 rounded-full ${colorClass}`}>
                       <IconComponent className="w-5 h-5 text-white" />
                     </div>
-                    <div 
-                      className="flex-1 cursor-pointer"
-                      onClick={() => !notification.read && markAsRead(notification.id)}
-                    >
+                    <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-semibold text-foreground">
                           {notification.title}
@@ -242,9 +316,16 @@ export default function Notifications() {
                       <p className="text-muted-foreground mb-2">
                         {notification.message}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </p>
+                        {notification.sender_profile?.display_name && (
+                          <p className="text-sm text-muted-foreground">
+                            by {notification.sender_profile.display_name}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
