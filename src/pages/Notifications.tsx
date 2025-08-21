@@ -62,6 +62,9 @@ export default function Notifications() {
     } catch (error) {
       console.error('Error fetching notifications:', error);
       
+      // Get user for mock data
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // If table doesn't exist or relationship error, show mock data for demo purposes
       if (error.message?.includes('relation "public.notifications" does not exist') || 
           error.message?.includes('Could not find a relationship') ||
@@ -70,7 +73,7 @@ export default function Notifications() {
         const mockNotifications: NotificationWithProfile[] = [
           {
             id: "1",
-            user_id: user.id,
+            user_id: user?.id || "mock-user-1",
             type: "message",
             title: "New Message",
             message: "You have a new message from John Doe",
@@ -85,7 +88,7 @@ export default function Notifications() {
           },
           {
             id: "2",
-            user_id: user.id,
+            user_id: user?.id || "mock-user-2",
             type: "like",
             title: "Post Liked",
             message: "Sarah liked your post",
@@ -100,7 +103,7 @@ export default function Notifications() {
           },
           {
             id: "3",
-            user_id: user.id,
+            user_id: user?.id || "mock-user-3",
             type: "community",
             title: "New Community Post",
             message: "New post in Malaysian Students community",
