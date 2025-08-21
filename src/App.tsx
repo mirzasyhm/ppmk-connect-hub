@@ -21,6 +21,7 @@ import ProfileInfoPage from "./pages/ProfileInfo";
 import Admin from "./pages/Admin";
 import Notifications from "./pages/Notifications";
 import { Settings } from "./pages/Settings";
+import SearchProfiles from "./pages/SearchProfiles";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -149,6 +150,16 @@ const App = () => {
             <Route path="/profile/info" element={
               <AuthenticatedLayout>
                 <ProfileInfoPage />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/profile/:userId" element={
+              <AuthenticatedLayout>
+                <Profile />
+              </AuthenticatedLayout>
+            } />
+            <Route path="/search" element={
+              <AuthenticatedLayout>
+                <SearchProfiles />
               </AuthenticatedLayout>
             } />
             <Route path="/admin" element={

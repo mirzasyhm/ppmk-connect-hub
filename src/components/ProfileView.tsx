@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { User, MapPin, GraduationCap, Calendar, Settings, Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import ProfileActivities from "./ProfileActivities";
 import ProfilePrivacySettings from "./ProfilePrivacySettings";
 
@@ -14,7 +14,7 @@ interface ProfileViewProps {
   userId?: string; // If provided, viewing someone else's profile
 }
 
-export default function ProfileView({ userId }: ProfileViewProps) {
+export default function ProfileView({ userId: propUserId }: ProfileViewProps) {
   const [profile, setProfile] = useState<any>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
@@ -26,19 +26,21 @@ export default function ProfileView({ userId }: ProfileViewProps) {
     showActivities: true,
     showGallery: true,
   });
+  const { userId } = useParams();
+  const actualUserId = propUserId || userId;
 
   useEffect(() => {
     getProfile();
-  }, [userId]);
+  }, [actualUserId]);
 
   const getProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const targetUserId = userId || user?.id;
+      const targetUserId = actualUserId || user?.id;
       
       if (!targetUserId) return;
 
-      setIsOwnProfile(!userId || userId === user?.id);
+      setIsOwnProfile(!actualUserId || actualUserId === user?.id);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -209,7 +211,7 @@ export default function ProfileView({ userId }: ProfileViewProps) {
       {/* Activities Section */}
       {privacySettings.showActivities && (
         <ProfileActivities 
-          userId={userId || profile.user_id}
+          userId={actualUserId || profile.user_id}
           showGallery={privacySettings.showGallery}
         />
       )}
