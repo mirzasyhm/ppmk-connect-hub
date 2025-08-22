@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Upload, Shield, Database, Search, Eye, Edit } from "lucide-react";
+import { Users, Upload, Shield, Database, Search, Eye, Edit, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import * as XLSX from 'xlsx';
 
 interface AdminProps {
@@ -34,6 +35,7 @@ const Admin = ({ user, session, profile }: AdminProps) => {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -431,6 +433,38 @@ const Admin = ({ user, session, profile }: AdminProps) => {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    setIsDeleting(true);
+    try {
+      // Delete user from Supabase Auth (this will cascade delete related data)
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) {
+        console.error('Error deleting user:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete user. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `User ${userName} has been deleted successfully.`,
+        });
+        await fetchAdminData(); // Refresh the user list
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Filter users based on search query
   const filteredUsers = users.filter(user => {
     if (!searchQuery) return true;
@@ -612,28 +646,59 @@ const Admin = ({ user, session, profile }: AdminProps) => {
                                     <Eye className="w-3 h-3" />
                                     Detail
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEditUser(user)}
-                                    className="gap-1"
-                                  >
-                                    <Edit className="w-3 h-3" />
-                                    Edit
-                                  </Button>
-                                  <Select
-                                    defaultValue={user.user_roles?.[0]?.role || 'member'}
-                                    onValueChange={(value) => updateUserRole(user.user_id, value)}
-                                  >
-                                    <SelectTrigger className="w-32">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="member">Member</SelectItem>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                      <SelectItem value="superadmin">Superadmin</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => handleEditUser(user)}
+                                     className="gap-1"
+                                   >
+                                     <Edit className="w-3 h-3" />
+                                     Edit
+                                   </Button>
+                                   <AlertDialog>
+                                     <AlertDialogTrigger asChild>
+                                       <Button
+                                         variant="outline"
+                                         size="sm"
+                                         className="gap-1 text-destructive hover:text-destructive"
+                                         disabled={isDeleting}
+                                       >
+                                         <Trash2 className="w-3 h-3" />
+                                         Delete
+                                       </Button>
+                                     </AlertDialogTrigger>
+                                     <AlertDialogContent>
+                                       <AlertDialogHeader>
+                                         <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                         <AlertDialogDescription>
+                                           Are you sure you want to delete user "{user.full_name || user.display_name || user.email}"? 
+                                           This action cannot be undone and will permanently remove all user data.
+                                         </AlertDialogDescription>
+                                       </AlertDialogHeader>
+                                       <AlertDialogFooter>
+                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                         <AlertDialogAction
+                                           onClick={() => handleDeleteUser(user.user_id, user.full_name || user.display_name || user.email)}
+                                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                         >
+                                           Delete User
+                                         </AlertDialogAction>
+                                       </AlertDialogFooter>
+                                     </AlertDialogContent>
+                                   </AlertDialog>
+                                   <Select
+                                     defaultValue={user.user_roles?.[0]?.role || 'member'}
+                                     onValueChange={(value) => updateUserRole(user.user_id, value)}
+                                   >
+                                     <SelectTrigger className="w-32">
+                                       <SelectValue />
+                                     </SelectTrigger>
+                                     <SelectContent>
+                                       <SelectItem value="member">Member</SelectItem>
+                                       <SelectItem value="admin">Admin</SelectItem>
+                                       <SelectItem value="superadmin">Superadmin</SelectItem>
+                                     </SelectContent>
+                                   </Select>
                                 </div>
                               </TableCell>
                             )}
