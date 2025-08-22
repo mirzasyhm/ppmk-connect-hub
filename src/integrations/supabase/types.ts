@@ -581,6 +581,51 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          related_id: string | null
+          related_type: string | null
+          sender_id: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          related_id?: string | null
+          related_type?: string | null
+          sender_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          related_id?: string | null
+          related_type?: string | null
+          sender_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           content: string
@@ -628,6 +673,7 @@ export type Database = {
           identity_card_number: string | null
           marital_status: string | null
           medical_condition: string | null
+          must_change_password: boolean
           next_of_kin: string | null
           next_of_kin_contact_number: string | null
           next_of_kin_relationship: string | null
@@ -667,6 +713,7 @@ export type Database = {
           identity_card_number?: string | null
           marital_status?: string | null
           medical_condition?: string | null
+          must_change_password?: boolean
           next_of_kin?: string | null
           next_of_kin_contact_number?: string | null
           next_of_kin_relationship?: string | null
@@ -706,6 +753,7 @@ export type Database = {
           identity_card_number?: string | null
           marital_status?: string | null
           medical_condition?: string | null
+          must_change_password?: boolean
           next_of_kin?: string | null
           next_of_kin_contact_number?: string | null
           next_of_kin_relationship?: string | null
@@ -801,51 +849,6 @@ export type Database = {
           marketplace_currency?: boolean
           marketplace_items?: boolean
           messages_general?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      notifications: {
-        Row: {
-          action_url: string | null
-          created_at: string
-          id: string
-          message: string
-          read: boolean
-          related_id: string | null
-          related_type: string | null
-          sender_id: string | null
-          title: string
-          type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          action_url?: string | null
-          created_at?: string
-          id?: string
-          message: string
-          read?: boolean
-          related_id?: string | null
-          related_type?: string | null
-          sender_id?: string | null
-          title: string
-          type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          action_url?: string | null
-          created_at?: string
-          id?: string
-          message?: string
-          read?: boolean
-          related_id?: string | null
-          related_type?: string | null
-          sender_id?: string | null
-          title?: string
-          type?: string
           updated_at?: string
           user_id?: string
         }

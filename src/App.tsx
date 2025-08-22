@@ -22,6 +22,7 @@ import Admin from "./pages/Admin";
 import Notifications from "./pages/Notifications";
 import { Settings } from "./pages/Settings";
 import SearchProfiles from "./pages/SearchProfiles";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -107,6 +108,7 @@ const App = () => {
           <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/feed" element={
               <AuthenticatedLayout>
                 <Feed user={user!} session={session!} profile={profile} />

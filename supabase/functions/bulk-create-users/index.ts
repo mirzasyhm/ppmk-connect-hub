@@ -99,6 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
             username: userData.email.split('@')[0],
             display_name: userData.fullName,
             email: userData.email,
+            must_change_password: true, // Force password change on first login
             full_name: userData.profileData.full_name,
             gender: userData.profileData.gender,
             marital_status: userData.profileData.marital_status,

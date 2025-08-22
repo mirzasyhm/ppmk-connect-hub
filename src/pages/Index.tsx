@@ -18,9 +18,9 @@ const Index = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // If user is authenticated, redirect to feed
+        // If user is authenticated, check if password change is required
         if (session?.user) {
-          navigate('/feed');
+          checkPasswordChangeRequired(session.user.id);
         }
         setLoading(false);
       }
@@ -31,9 +31,9 @@ const Index = () => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      // If user is authenticated, redirect to feed
+      // If user is authenticated, check if password change is required
       if (session?.user) {
-        navigate('/feed');
+        checkPasswordChangeRequired(session.user.id);
       } else {
         setLoading(false);
       }
@@ -41,6 +41,32 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkPasswordChangeRequired = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('must_change_password')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking password change requirement:', error);
+        // If error, assume no password change needed and proceed to feed
+        navigate('/feed');
+        return;
+      }
+
+      if (profile?.must_change_password) {
+        navigate('/change-password');
+      } else {
+        navigate('/feed');
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      navigate('/feed');
+    }
+  };
 
   const handleAuthSuccess = () => {
     // Navigation will be handled by auth state change
