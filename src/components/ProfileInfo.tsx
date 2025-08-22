@@ -35,6 +35,8 @@ interface ProfileFormData {
   study_level: string;
   study_start_date: string;
   study_end_date: string;
+  study_year: string;
+  ppmk_batch: string;
   sponsorship: string;
   sponsorship_address: string;
   sponsorship_phone_number: string;
@@ -534,6 +536,26 @@ export default function ProfileInfo({ profile, onClose }: ProfileInfoProps) {
                 ) : (
                   <div className="p-3 bg-muted rounded-md">
                     {formatDate(profile?.study_end_date)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="study_year">Study Year</Label>
+                {isEditing ? (
+                  <Input {...register("study_year")} placeholder="Study year" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.study_year)}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="ppmk_batch">PPMK Batch</Label>
+                {isEditing ? (
+                  <Input {...register("ppmk_batch")} placeholder="PPMK batch" />
+                ) : (
+                  <div className="p-3 bg-muted rounded-md">
+                    {formatDisplayValue(profile?.ppmk_batch)}
                   </div>
                 )}
               </div>

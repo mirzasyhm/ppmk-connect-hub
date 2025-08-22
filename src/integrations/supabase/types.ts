@@ -678,6 +678,7 @@ export type Database = {
           next_of_kin_contact_number: string | null
           next_of_kin_relationship: string | null
           passport_number: string | null
+          ppmk_batch: string | null
           race: string | null
           religion: string | null
           sponsorship: string | null
@@ -687,6 +688,7 @@ export type Database = {
           study_end_date: string | null
           study_level: string | null
           study_start_date: string | null
+          study_year: string | null
           studying_place: string | null
           telephone_korea: string | null
           telephone_malaysia: string | null
@@ -718,6 +720,7 @@ export type Database = {
           next_of_kin_contact_number?: string | null
           next_of_kin_relationship?: string | null
           passport_number?: string | null
+          ppmk_batch?: string | null
           race?: string | null
           religion?: string | null
           sponsorship?: string | null
@@ -727,6 +730,7 @@ export type Database = {
           study_end_date?: string | null
           study_level?: string | null
           study_start_date?: string | null
+          study_year?: string | null
           studying_place?: string | null
           telephone_korea?: string | null
           telephone_malaysia?: string | null
@@ -758,6 +762,7 @@ export type Database = {
           next_of_kin_contact_number?: string | null
           next_of_kin_relationship?: string | null
           passport_number?: string | null
+          ppmk_batch?: string | null
           race?: string | null
           religion?: string | null
           sponsorship?: string | null
@@ -767,6 +772,7 @@ export type Database = {
           study_end_date?: string | null
           study_level?: string | null
           study_start_date?: string | null
+          study_year?: string | null
           studying_place?: string | null
           telephone_korea?: string | null
           telephone_malaysia?: string | null

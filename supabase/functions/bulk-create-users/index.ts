@@ -119,6 +119,8 @@ const handler = async (req: Request): Promise<Response> => {
             study_level: userData.profileData.study_level,
             study_start_date: userData.profileData.study_start_date,
             study_end_date: userData.profileData.study_end_date,
+            study_year: userData.profileData.study_year,
+            ppmk_batch: userData.profileData.ppmk_batch,
             sponsorship: userData.profileData.sponsorship,
             sponsorship_address: userData.profileData.sponsorship_address,
             sponsorship_phone_number: userData.profileData.sponsorship_phone_number,
